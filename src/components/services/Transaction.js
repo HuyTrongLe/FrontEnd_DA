@@ -44,17 +44,42 @@ apiInstance.interceptors.response.use(
     }
 );
 
+const cache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+const getCachedData = (key) => {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  return null;
+};
+
+const setCachedData = (key, data) => {
+  cache.set(key, {
+    data,
+    timestamp: Date.now()
+  });
+};
+
 export const getCoinTransactionByAccountId = async (accountId) => {
-    if (!accountId) {
-        return 0;
-    }
-    try {
-        const response = await apiInstance.get(`/CoinTransaction?$filter=CustomerId eq ${accountId} and status eq 1&$orderby=date desc`);
-        return response.data; 
-    } catch (error) {
-        console.error(`Error fetching Account with ID ${accountId}:`, error);
-        throw error;
-    }
+  if (!accountId) return 0;
+  
+  const cacheKey = `coinTransaction_${accountId}`;
+  const cachedData = getCachedData(cacheKey);
+  
+  if (cachedData) {
+    return cachedData;
+  }
+
+  try {
+    const response = await apiInstance.get(`/CoinTransaction?$filter=CustomerId eq ${accountId} and status eq 1&$orderby=date desc`);
+    setCachedData(cacheKey, response.data);
+    return response.data;
+  } catch (error) {
+    console.error(`API Error fetching transactions for Account ${accountId}:`, error.message);
+    return []; // Return empty array instead of throwing
+  }
 };
 
 export const getCoinTransactionByCoinTransactionId = async (coinTransactionId) => {
@@ -112,14 +137,14 @@ export const getNotDonWithdrawCoinTransactionByAccountId = async (accountId) => 
 };
 
 export const getWithdraw = async () => {
-    try {
-        const response = await apiInstance.get(`/CoinTransaction?$filter=coinFluctuations lt 0 and status eq -1`);
-        return response.data; 
-    } catch (error) {
-        console.error(`Error fetching Account with ID ${accountId}:`, error);
-        throw error;
-    }
-}
+  try {
+    const response = await apiInstance.get('/CoinTransaction?$filter=coinFluctuations lt 0 and status eq -1');
+    return response.data;
+  } catch (error) {
+    console.error('API Error fetching withdrawals:', error.message);
+    return []; // Return empty array instead of throwing
+  }
+};
 
 export const updateCoinTransaction = async (coinTransaction) => {
     try {

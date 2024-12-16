@@ -25,61 +25,94 @@ const Dashboard = () => {
     try {
       setIsLoading(true);
       
-      // Fetch users count
-      const usersResponse = await axios.get('https://rmrbdapi.somee.com/odata/account', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Token': '123-abc',
-        }
-      });
-      console.log('Users data:', usersResponse.data);
+      // Fetch initial data in parallel
+      const [usersResponse, ordersResponse, withdrawResponse, recipesResponse, ebooksResponse] = 
+        await Promise.all([
+          axios.get('https://rmrbdapi.somee.com/odata/account', {
+            headers: {
+              'Content-Type': 'application/json',
+              'Token': '123-abc',
+            }
+          }).catch(error => {
+            console.error('Error fetching users:', error);
+            return { data: [] };
+          }),
+          
+          axios.get('https://rmrbdapi.somee.com/odata/BookOrder', {
+            headers: {
+              'Content-Type': 'application/json',
+              'Token': '123-abc',
+            }
+          }).catch(error => {
+            console.error('Error fetching orders:', error);
+            return { data: [] };
+          }),
+          
+          getWithdraw().catch(error => {
+            console.error('Error fetching withdrawals:', error);
+            return [];
+          }),
+          
+          axios.get('https://rmrbdapi.somee.com/odata/Recipe', {
+            headers: {
+              'Content-Type': 'application/json',
+              'Token': '123-abc',
+            }
+          }).catch(error => {
+            console.error('Error fetching recipes:', error);
+            return { data: [] };
+          }),
+          
+          axios.get('https://rmrbdapi.somee.com/odata/ebook', {
+            headers: {
+              'Content-Type': 'application/json',
+              'Token': '123-abc',
+            }
+          }).catch(error => {
+            console.error('Error fetching ebooks:', error);
+            return { data: [] };
+          })
+        ]);
 
-      // Create a map of user IDs to names for quick lookup
-      const userMap = new Map(
-        usersResponse.data.map(user => [user.accountId, user.userName])
-      );
+      const users = Array.isArray(usersResponse.data) ? usersResponse.data : [];
+      const activeUsers = users.filter(account => account.accountStatus === 1);
+      
+      // Create user map
+      const userMap = new Map(users.map(user => [user.accountId, user.userName]));
 
-      // Count all active accounts
-      const customerCount = Array.isArray(usersResponse.data) 
-        ? usersResponse.data.filter(account => account.accountStatus === 1).length
-        : 0;
-
-      // Fetch all orders
-      const ordersResponse = await axios.get('https://rmrbdapi.somee.com/odata/BookOrder', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Token': '123-abc',
-        }
-      });
-      console.log('Raw orders data:', ordersResponse.data);
-
-      // Filter valid orders (those with orderCode)
+      // Process orders
       const validOrders = Array.isArray(ordersResponse.data) 
         ? ordersResponse.data.filter(order => order.orderCode !== null)
         : [];
-      console.log('Valid orders:', validOrders);
 
-      // Fetch all transactions
-      const withdrawResponse = await getWithdraw();
-      console.log('Withdraw transactions:', withdrawResponse);
-
-      // Get recent transactions from all users
+      // Fetch transactions in batches of 5 users at a time
+      const batchSize = 5;
       const recentTransactions = [];
-      for (const user of usersResponse.data) {
-        if (user.accountStatus === 1) {
-          const userTransactions = await getCoinTransactionByAccountId(user.accountId);
-          if (Array.isArray(userTransactions)) {
-            recentTransactions.push(...userTransactions);
+      
+      for (let i = 0; i < activeUsers.length; i += batchSize) {
+        const userBatch = activeUsers.slice(i, i + batchSize);
+        const batchPromises = userBatch.map(user => 
+          getCoinTransactionByAccountId(user.accountId)
+            .catch(error => {
+              console.error(`Error fetching transactions for user ${user.accountId}:`, error);
+              return [];
+            })
+        );
+        
+        const batchResults = await Promise.all(batchPromises);
+        batchResults.forEach(transactions => {
+          if (Array.isArray(transactions)) {
+            recentTransactions.push(...transactions);
           }
-        }
+        });
       }
 
-      // Sort transactions by date and take the 5 most recent
+      // Sort and limit transactions
       const sortedTransactions = recentTransactions
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .slice(0, 5);
 
-      // Process orders data for the sales chart
+      // Process monthly data
       const monthlyData = validOrders.reduce((acc, order) => {
         if (!order.purchaseDate) return acc;
 
@@ -100,30 +133,8 @@ const Dashboard = () => {
         return acc;
       }, {});
 
-      console.log('Monthly data:', monthlyData);
-      const salesData = Object.values(monthlyData);
-      console.log('Sales data:', salesData);
-
-      // Fetch recipes count
-      const recipesResponse = await axios.get('https://rmrbdapi.somee.com/odata/Recipe', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Token': '123-abc',
-        }
-      });
-      console.log('Recipes data:', recipesResponse.data);
-
-      // Fetch ebooks count
-      const ebooksResponse = await axios.get('https://rmrbdapi.somee.com/odata/ebook', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Token': '123-abc',
-        }
-      });
-      console.log('Ebooks data:', ebooksResponse.data);
-
       setStatistics({
-        totalUsers: customerCount,
+        totalUsers: activeUsers.length,
         totalOrders: validOrders.length,
         totalEbooks: Array.isArray(ebooksResponse.data) ? ebooksResponse.data.length : 0,
         totalRecipes: Array.isArray(recipesResponse.data) ? recipesResponse.data.length : 0,
@@ -137,10 +148,18 @@ const Dashboard = () => {
         }))
       });
 
-      setSalesData(salesData);
-      setIsLoading(false);
+      setSalesData(Object.values(monthlyData));
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      setStatistics({
+        totalUsers: 0,
+        totalOrders: 0,
+        totalEbooks: 0,
+        totalRecipes: 0,
+        recentTransactions: []
+      });
+      setSalesData([]);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -159,7 +178,6 @@ const Dashboard = () => {
     </div>
   );
 
-  // Update the Recent Transactions table to show transaction status correctly
   const getTransactionStatus = (status) => {
     switch (status) {
       case 1:
@@ -184,7 +202,6 @@ const Dashboard = () => {
   return (
     <AdminLayout title="Tổng Quan">
       <div className="space-y-6">
-        {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
             title="Tổng Người Dùng"
@@ -212,9 +229,7 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Sales Chart */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-lg font-semibold mb-4">Doanh Thu Theo Tháng</h2>
             <div className="h-80">
@@ -231,7 +246,6 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Orders Chart */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-lg font-semibold mb-4">Đơn Hàng Theo Tháng</h2>
             <div className="h-80">
@@ -249,7 +263,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Recent Transactions */}
         <div className="bg-white rounded-lg shadow-md">
           <div className="p-6">
             <h2 className="text-lg font-semibold mb-4">Giao Dịch Gần Đây</h2>
