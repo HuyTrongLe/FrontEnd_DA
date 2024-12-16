@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { checkEbookOwnership } from '../../services/EbookService';
 import Cookies from 'js-cookie';
-import { decryptData } from "../../Encrypt/encryptionUtils";
+
 const EbookCard = ({ ebook }) => {
   const [isOwned, setIsOwned] = useState(false);
 
   useEffect(() => {
     const checkOwnership = async () => {
-      const customerId = decryptData(Cookies.get("UserId"));
+      const customerId = Cookies.get('UserId');
       if (customerId) {
         const owned = await checkEbookOwnership(customerId, ebook.ebookId);
         setIsOwned(owned);
@@ -53,6 +53,8 @@ const EbookCard = ({ ebook }) => {
       <p className="text-center text-gray-600">
         {isOwned ? (
           <span className="text-green-600 font-medium">Đã sở hữu</span>
+        ) : ebook.price === 0 ? (
+          <span className="text-green-600 font-medium">Miễn phí</span>
         ) : (
           `${ebook.price} xu`
         )}

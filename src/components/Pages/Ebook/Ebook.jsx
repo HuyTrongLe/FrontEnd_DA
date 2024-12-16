@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { getEbooks, checkEbookOwnership } from "../../services/EbookService";
 import EbookSidebar from "./EbookSidebar";
 import EbookCard from './EbookCard';
 import Cookies from 'js-cookie';
-import { decryptData } from "../../Encrypt/encryptionUtils";
+
 function Ebook() {
   const [ebooks, setEbooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,65 +13,42 @@ function Ebook() {
     priceRange: null,
   });
 
-  useEffect(() => {
-    fetchEbooks();
-  }, [filters]);
+  // Cache user ID
+  const customerId = useMemo(() => Cookies.get('UserId'), []);
 
+  // Optimize data fetching
   const fetchEbooks = async () => {
     try {
       setLoading(true);
-      const data = await getEbooks();
+      
+      // Parallel requests for better performance
+      const [ebooksData] = await Promise.all([
+        getEbooks(),
+        // Add other parallel requests here if needed
+      ]);
 
-      console.log("Fetched Ebooks:", data); // Log the fetched ebooks
-
-      if (!data || data.length === 0) {
-        setError("No ebooks found");
+      if (!ebooksData || ebooksData.length === 0) {
         setEbooks([]);
         return;
       }
 
-      // Get ownership status for all ebooks if user is logged in
-      const customerId = decryptData(Cookies.get("UserId"));
-      let ebooksWithOwnership = data;
-
+      // Batch ownership checks for better performance
+      let ebooksWithOwnership = ebooksData;
       if (customerId) {
-        ebooksWithOwnership = await Promise.all(
-          data.map(async (ebook) => {
-            const isOwned = await checkEbookOwnership(customerId, ebook.ebookId);
-            return { ...ebook, isOwned };
-          })
+        const ownershipChecks = await Promise.all(
+          ebooksData.map(ebook => 
+            checkEbookOwnership(customerId, ebook.ebookId)
+              .catch(() => false) // Handle individual failures gracefully
+          )
         );
+        
+        ebooksWithOwnership = ebooksData.map((ebook, index) => ({
+          ...ebook,
+          isOwned: ownershipChecks[index]
+        }));
       }
 
-      let filteredEbooks = ebooksWithOwnership;
-
-      // Apply category filter
-      if (filters.category) {
-        filteredEbooks = filteredEbooks.filter(
-          (ebook) => ebook.categoryId === filters.category
-        );
-      }
-
-      // Apply price filter
-      if (filters.priceRange) {
-        filteredEbooks = filteredEbooks.filter((ebook) => {
-          const price = ebook.price;
-          switch (filters.priceRange) {
-            case "0-50000":
-              return price >= 0 && price <= 50000;
-            case "50000-100000":
-              return price > 50000 && price <= 100000;
-            case "100000+":
-              return price > 100000;
-            default:
-              return true;
-          }
-        });
-      }
-
-      console.log("Filtered Ebooks:", filteredEbooks); // Log the filtered ebooks
-
-      setEbooks(filteredEbooks);
+      setEbooks(ebooksWithOwnership);
     } catch (error) {
       console.error("Error fetching ebooks:", error);
       setError("Failed to load ebooks");
@@ -80,39 +57,76 @@ function Ebook() {
     }
   };
 
+  // Memoize filtered ebooks to prevent unnecessary recalculations
+  const filteredEbooks = useMemo(() => {
+    let filtered = [...ebooks];
+
+    // Apply category filter
+    if (filters.categories) {
+      filtered = filtered.filter(
+        ebook => ebook.categoryId === filters.categories
+      );
+    }
+
+    // Apply price filter
+    if (filters.priceRanges && filters.priceRanges.length > 0) {
+      filtered = filtered.filter(ebook => {
+        return filters.priceRanges.some(range => {
+          const [min, max] = range.split("-").map(Number);
+          return ebook.price >= min && ebook.price <= max;
+        });
+      });
+    }
+
+    // Apply rating filter
+    if (filters.ratings && filters.ratings.length > 0) {
+      filtered = filtered.filter(ebook => {
+        return filters.ratings.includes(Math.round(ebook.bookRate || 0));
+      });
+    }
+
+    return filtered;
+  }, [ebooks, filters]);
+
+  // Use effect with proper dependencies
+  useEffect(() => {
+    fetchEbooks();
+  }, []); // Empty dependency array since filters are now handled by useMemo
+
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
-  if (ebooks.length === 0) {
-    return <div>No ebooks found</div>;
-  }
-
   return (
-    <div className="container mx-auto px-4 py-8 bg-white">
-      <h2 className="text-2xl font-bold mb-6 text-black">Sách điện tử</h2>
-      <div className="flex flex-col md:flex-row gap-8">
-        <div className="w-full md:w-1/4">
-          <EbookSidebar onFilterChange={handleFilterChange} />
-        </div>
-        
-        <div className="w-full md:w-3/4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {ebooks.map((ebook) => (
-              <EbookCard key={ebook.ebookId} ebook={ebook} />
-            ))}
+    <section className="section-center min-h-screen">
+      <div className="container px-4 mx-auto">
+        <div className="flex flex-col lg:flex-row items-start justify-between -mx-4">
+          {/* Sidebar */}
+          <div className="w-full lg:w-1/4 px-4 mb-8 lg:mb-0">
+            <EbookSidebar onFilterChange={handleFilterChange} />
+          </div>
+
+          {/* Main Content */}
+          <div className="w-full lg:w-3/4 px-4">
+            <div className="rounded-lg shadow-md bg-gray-300 p-4">
+              {loading ? (
+                <p className="text-2xl text-center text-blue-500">Đang tải dữ liệu...</p>
+              ) : error ? (
+                <p className="text-center text-red-500">{error}</p>
+              ) : filteredEbooks.length === 0 ? (
+                <p className="text-2xl text-center text-gray-500 font-bold">Không tìm thấy sách nào.</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredEbooks.map((ebook) => (
+                    <EbookCard key={ebook.ebookId} ebook={ebook} />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 

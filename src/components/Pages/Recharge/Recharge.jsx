@@ -25,6 +25,7 @@ const RechargePage = () => {
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const [customCoins, setCustomCoins] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('PayOS'); // Lưu phương thức thanh toán
+  const [userAvatar, setUserAvatar] = useState('');
   const [eror, setError] = useState('');
 
 
@@ -75,6 +76,7 @@ const RechargePage = () => {
       if (storedCoin) {
         setCoin(storedCoin.coin);
         setUserName(storedCoin.userName);
+        setUserAvatar(storedCoin.avatar);
       }
     };
     fetchUserData();
@@ -124,13 +126,13 @@ const RechargePage = () => {
         <div className="flex items-center justify-between p-4 bg-gray-100 rounded-lg mb-4">
           <div className="flex items-center">
             <img
-              src="/images/avatar-guest.png"
+              src={userAvatar || "/images/avatar-guest.png"}
               alt="User avatar"
-              className="w-10 h-10 rounded-full mr-3"
+              className="w-14 h-14 object-cover rounded-full mr-2"
             />
             <div>
-              <p className="font-bold text-gray-800">{userName}</p>
-              <p className="text-sm text-gray-500"><img src="images/icon/dollar.png" alt="" className='h-5 w-5 inline-block'/> {Intl.NumberFormat('de-DE').format(coin)}</p>
+              <p className="font-bold text-lg text-gray-800">{userName}</p>
+              <p className="text-lg text-gray-800 font-semibold"><img src="images/icon/dollar.png" alt="" className='h-6 w-6 mb-1 inline-block'/> {Intl.NumberFormat('de-DE').format(coin)}</p>
             </div>
           </div>
           <a href="/coinTransaction" className="text-gray-900 font-bold cursor-pointer">
@@ -151,7 +153,7 @@ const RechargePage = () => {
                 } cursor-pointer`}
               onClick={() => handleSelect(option)}
             >
-              <div className="font-bold text-gray-900 text-xl text-center mb-1"><img src="images/icon/dollar.png" alt="" className='h-5 w-5 inline-block'/> {Intl.NumberFormat('de-DE').format(option.coins)}</div>
+              <div className="font-bold text-gray-900 text-xl text-center mb-1"><img src="images/icon/dollar.png" alt="" className='h-6 w-6 inline-block'/> {Intl.NumberFormat('de-DE').format(option.coins)}</div>
               <div className="text-gray-600 text-sm text-center">
                 {typeof option.price === 'number' ? `₫${option.price.toLocaleString()}` : option.price}
               </div>
@@ -163,7 +165,7 @@ const RechargePage = () => {
             className="p-3 rounded-sm shadow-sm cursor-pointer border-3"
             onClick={handleOpenCustomModal}
           >
-            <div className="font-semibold text-xl mb-1 text-center">&#11088; Tùy chỉnh</div>
+            <div className="font-semibold text-2xl mb-1 text-center">&#11088; Tùy chỉnh</div>
             <div className="text-gray-600 font-semibold text-sm">Khuyến mãi nạp từ 100.000 XU</div>
           </div>
         </div>
@@ -244,7 +246,7 @@ const RechargePage = () => {
                   className="w-full py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition"
                   disabled={!total || !paymentMethod || isLoading}
                 >
-                  {isLoading ? "Waiting..." : "Recharge"}
+                  {isLoading ? "Waiting..." : "Thanh Toán"}
                 </button>
               </div>
             </div>

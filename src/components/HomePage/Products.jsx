@@ -16,9 +16,9 @@ const Product = () => {
                 const recpie = await searchRecipe(searchString);
                 const book = await searchBook(searchString);
                 const ebook = await searchEbook(searchString);
-                setRecipes(recpie.slice(0, 6));
-                setBooks(book.slice(0, 6));
-                setEbooks(ebook.slice(0, 6));
+                setRecipes(recpie.slice(0, 8));
+                setBooks(book.slice(0, 8));
+                setEbooks(ebook.slice(0, 8));
             } catch (error) {
                 console.log(error);
             } finally {

@@ -4,44 +4,58 @@ import axios from "axios";
 function EbookSidebar({ onFilterChange }) {
   const [categories, setCategories] = useState([]);
   const [filters, setFilters] = useState({
-    category: null,
-    priceRange: null,
+    categories: null,
+    priceRanges: [],
+    ratings: [],
   });
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(
+          "https://rmrbdapi.somee.com/odata/BookCategory",
+          {
+            headers: { token: "123-abc" },
+          }
+        );
+        const activeCategories = response.data.filter(
+          (category) => category.status === 1
+        );
+        setCategories(activeCategories);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    };
+
     fetchCategories();
   }, []);
 
-  const fetchCategories = async () => {
-    try {
-      const response = await axios.get(
-        "https://rmrbdapi.somee.com/odata/BookCategory",
-        {
-          headers: { token: "123-abc" },
-        }
-      );
-      const activeCategories = response.data.filter(
-        (category) => category.status === 1
-      );
-      setCategories(activeCategories);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
-  };
-
   const handleFilterChange = (filterType, value) => {
-    const newFilters = {
-      ...filters,
-      [filterType]: value,
-    };
-    setFilters(newFilters);
-    onFilterChange(newFilters);
+    setFilters((prevFilters) => {
+      const updatedFilters = { ...prevFilters };
+
+      if (filterType === "categories") {
+        updatedFilters.categories = updatedFilters.categories === value ? null : value;
+      } else {
+        if (updatedFilters[filterType].includes(value)) {
+          updatedFilters[filterType] = updatedFilters[filterType].filter(
+            (item) => item !== value
+          );
+        } else {
+          updatedFilters[filterType].push(value);
+        }
+      }
+
+      onFilterChange(updatedFilters);
+      return updatedFilters;
+    });
   };
 
   const clearFilters = () => {
     const newFilters = {
-      category: null,
-      priceRange: null,
+      categories: null,
+      priceRanges: [],
+      ratings: [],
     };
     setFilters(newFilters);
     onFilterChange(newFilters);
@@ -61,13 +75,19 @@ function EbookSidebar({ onFilterChange }) {
                 type="radio"
                 name="category"
                 className="w-4 h-4 mr-3 text-blue-500 focus:ring-blue-400"
-                checked={filters.category === category.categoryId}
-                onChange={() => handleFilterChange("category", category.categoryId)}
+                checked={filters.categories === category.categoryId}
+                onChange={() => handleFilterChange("categories", category.categoryId)}
               />
               <span className="text-gray-600">{category.name}</span>
             </li>
           ))}
         </ul>
+        <button
+          className="mt-4 px-4 py-2 text-sm font-medium text-white bg-red-400 rounded"
+          onClick={clearFilters}
+        >
+          Bỏ chọn
+        </button>
       </div>
 
       {/* Price Ranges */}
@@ -75,17 +95,17 @@ function EbookSidebar({ onFilterChange }) {
         <label className="font-bold mb-4 block">Giá</label>
         <ul className="space-y-3">
           {[
-            { label: "0đ - 50,000đ", value: "0-50000" },
-            { label: "50,000đ - 100,000đ", value: "50000-100000" },
-            { label: "Trên 100,000đ", value: "100000+" },
+            { label: "Miễn phí", value: "0-0" },
+            { label: "1 - 150,000 xu", value: "1-150000" },
+            { label: "150,001 - 300,000 xu", value: "150001-300000" },
+            { label: ">300,000 xu", value: "300001-999999999" },
           ].map((range) => (
             <li key={range.value} className="flex items-center">
               <input
-                type="radio"
-                name="priceRange"
-                className="w-4 h-4 mr-3 text-blue-500 focus:ring-blue-400"
-                checked={filters.priceRange === range.value}
-                onChange={() => handleFilterChange("priceRange", range.value)}
+                type="checkbox"
+                className="w-4 h-4 mr-3 text-blue-500 focus:ring-blue-400 rounded"
+                checked={filters.priceRanges.includes(range.value)}
+                onChange={() => handleFilterChange("priceRanges", range.value)}
               />
               <span className="text-gray-600">{range.label}</span>
             </li>
@@ -93,13 +113,23 @@ function EbookSidebar({ onFilterChange }) {
         </ul>
       </div>
 
-      {/* Clear Filters Button */}
-      <button
-        onClick={clearFilters}
-        className="w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors duration-200"
-      >
-        Xóa bộ lọc
-      </button>
+      {/* Ratings */}
+      <div className="mb-6">
+        <label className="font-bold mb-4 block">Đánh Giá</label>
+        <ul className="space-y-3">
+          {[5, 4, 3, 2, 1].map((rating) => (
+            <li key={rating} className="flex items-center">
+              <input
+                type="checkbox"
+                className="w-4 h-4 mr-3 text-blue-500 focus:ring-blue-400 rounded"
+                checked={filters.ratings.includes(rating)}
+                onChange={() => handleFilterChange("ratings", rating)}
+              />
+              <span className="text-gray-600">{rating} sao</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
