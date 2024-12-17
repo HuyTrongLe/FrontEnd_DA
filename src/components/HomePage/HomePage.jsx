@@ -8,9 +8,9 @@ const HomePage = () => {
   return (
     <div className="w-full min-h-screen">
       <Hero />
+      <About />
       <PlacesToGo />
       <Services/>
-      <About />
     </div>
   );
 };

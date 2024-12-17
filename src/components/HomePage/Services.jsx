@@ -4,7 +4,7 @@ import { services } from '../../data/data';
 
 const Services = () => {
     return (
-        <section className="section bg-gray-100" id="services">
+        <section className="section bg-gray-200" id="services">
             <div className="section-title">
                 <h2 className="text-gray-600 font-expletus">Dịch Vụ</h2>
                 <div className={`underline bg-gray-800`}></div>

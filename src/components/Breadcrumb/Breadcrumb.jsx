@@ -5,41 +5,62 @@ const Breadcrumb = () => {
   const location = useLocation();
   const pathnames = location.pathname.split("/").filter((x) => x);
 
-  if (location.pathname === "/" || location.pathname === "/") {
+  if (location.pathname === "/") {
     return null; // Không hiển thị breadcrumb khi ở trang Home
   }
 
   const breadcrumbNames = {
-    book: "Sách Nấu Ăn",
-    recipe: "Công Thức Nấu Ăn",
-    ebook: "Sách Điện Tử",
-    recharge: "Nạp xu",
-    coinTransaction: "Lịch sử giao dịch",
-    termsofpurchase: "Điều khoản và điều kiện mua tiền xu",
-    faq: "Câu hỏi thường gặp",
-    product: "Tìm kiếm sản phẩm",
-    report: "Khiếu nại",
-    "list-saved-recipe": "Công thức đã lưu",
-    "recipe-list-seller" : "Công thức đã đăng",
-    "update-information" : "Thông tin cá nhân",
-    "form updated-role" : "Thông tin đã yêu cầu",
-    "book-list-customer" : "Sách nấu ăn đã đăng",
-    "list-ebook-customer" : "Sách điện tử đã đăng",
-    "saved-ebooks": "Sách điện tử đã lưu",
-    "orders": "Đơn hàng của tôi",
-    "manage-addresses": "Địa chỉ của bạn",
-    places: "Khám phá món ăn",
-    "recipe-detail" : "Chi tiết công thức",
-    "book-detail": "Chi tiết sách nấu ăn",
-    withdrawrequest: "Yêu cầu rút tiền",
-    "update-to-seller" : "Đăng kí bán hàng",
-    "form-updated-role" : "Thông tín đăng kí bán hàng",
-    "cart" : "Giỏ hàng",
-    "create-recipe-seller" : "Thêm công thức nấu ăn",
-    "add-book-customer" : "Thêm sách mới",
-    "add-ebook-customer" : "Thêm sách điện tử mới"
+    // Sách và chi tiết sách
+    book: { name: "Sách Nấu Ăn", link: "/book" },
+    "book-detail": { name: "Chi Tiết Sách", link: "/book" },
 
+    // Công thức và chi tiết công thức
+    recipe: { name: "Công Thức Nấu Ăn", link: "/recipe" },
+    "recipe-detail": { name: "Chi Tiết Công Thức", link: "/recipe" },
+
+    // Sách điện tử và danh sách
+    ebook: { name: "Sách Điện Tử", link: "/ebook" },
+    "saved-ebooks": { name: "Sách Điện Tử Đã Lưu", link: "/ebook" },
+    "list-ebook-customer": { name: "Sách Điện Tử Đã Đăng", link: "/ebook" },
+    "add-ebook-customer": { name: "Thêm Sách Điện Tử Mới", link: "/ebook" },
+
+    // Nạp xu và giao dịch
+    recharge: { name: "Nạp Xu", link: "/recharge" },
+    coinTransaction: { name: "Lịch Sử Giao Dịch", link: "/coinTransaction" },
+    termsofpurchase: { name: "Điều Khoản và Điều Kiện Mua Tiền Xu", link: "/termsofpurchase" },
+
+    // Đơn hàng và địa chỉ
+    orders: { name: "Đơn Hàng Của Tôi", link: "/orders" },
+    "manage-addresses": { name: "Địa Chỉ Của Bạn", link: "/manage-addresses" },
+
+    // Giỏ hàng
+    cart: { name: "Giỏ Hàng", link: "/cart" },
+
+    // Công thức đăng của seller
+    "recipe-list-seller": { name: "Công Thức Đã Đăng", link: "/recipe-list-seller" },
+    "create-recipe-seller": { name: "Thêm Công Thức Mới", link: "/create-recipe-seller" },
+    "list-saved-recipe": { name: "Công Thức Đã Lưu", link: "/list-saved-recipe" },
+
+    // Sách nấu ăn của seller
+    "book-list-customer": { name: "Sách Nấu Ăn Đã Đăng", link: "/book-list-customer" },
+    "add-book-customer": { name: "Thêm Sách Mới", link: "/add-book-customer" },
+
+    // Người dùng và cập nhật thông tin
+    "update-information": { name: "Thông Tin Cá Nhân", link: "/update-information" },
+    "update-to-seller": { name: "Đăng Kí Bán Hàng", link: "/update-to-seller" },
+    "form-updated-role": { name: "Thông Tin Đăng Kí Bán Hàng", link: "/form-updated-role" },
+    "form updated-role": { name: "Thông Tin Đã Yêu Cầu", link: "/form-updated-role" },
+
+    // Khám phá và báo cáo
+    places: { name: "Khám Phá Món Ăn", link: "/places" },
+    report: { name: "Khiếu Nại", link: "/report" },
+
+    // Các trang khác
+    faq: { name: "Câu Hỏi Thường Gặp", link: "/faq" },
+    withdrawrequest: { name: "Yêu Cầu Rút Tiền", link: "/withdrawrequest" },
+    product: { name: "Tìm Kiếm Sản Phẩm", link: "/product" }
   };
+
 
   return (
     <>
@@ -65,9 +86,17 @@ const Breadcrumb = () => {
           </li>
 
           {pathnames.map((value, index) => {
-            const to = `/${pathnames.slice(0, index + 1).join("/")}`;
             const isLast = index === pathnames.length - 1;
-            const name = breadcrumbNames[value] || decodeURIComponent(value).replace("-", " ");
+            const breadcrumb = breadcrumbNames[value] || {
+              name: decodeURIComponent(value).replace("-", " "),
+              link: `/${value}`,
+            };
+
+            // Nếu là trang chi tiết thì quay về link cha
+            const to =
+              value === "book-detail"
+                ? breadcrumbNames["book-detail"].link
+                : breadcrumb.link;
 
             return (
               <li key={to} aria-current={isLast ? "page" : undefined}>
@@ -89,14 +118,14 @@ const Breadcrumb = () => {
                   </svg>
                   {isLast ? (
                     <span className="ms-1 text-lg font-medium text-gray-700 md:ms-2 dark:text-gray-400">
-                      {name}
+                      {breadcrumb.name}
                     </span>
                   ) : (
                     <Link
                       to={to}
                       className="ms-1 text-lg font-medium text-gray-800 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white"
                     >
-                      {name}
+                      {breadcrumb.name}
                     </Link>
                   )}
                 </div>

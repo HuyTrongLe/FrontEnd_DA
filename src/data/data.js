@@ -2,6 +2,8 @@ import placesBo from "/images/placeRecipe/placeBo.jpg";
 import placesGa from "/images/placeRecipe/placeGa.jpg";
 import placesCa from "/images/placeRecipe/placeCa.jpg";
 import placesHeo from "/images/placeRecipe/placeHeo.jpg";
+import placesChay from "/images/placeRecipe/placeChay.jpg";
+import placesTom from "/images/placeRecipe/placeTom.jpg";
 
 // places-to-go images
 import boLucLac from "/images/placeRecipe/boLucLac.jpg";
@@ -13,6 +15,14 @@ import gaKhoGung from "/images/placeRecipe/gaKhoGung.jpg";
 import gaNuongLu from "/images/placeRecipe/gaNuongLu.jpg";
 import heoKhoTau from "/images/placeRecipe/heoKhoTau.jpg";
 import heoNuongMamChao from "/images/placeRecipe/heoNuongMamChao.jpg";
+import chayChaGioChay from "/images/placeRecipe/chayChaGioChay.jpg";
+import chayTauHuSotCaChua from "/images/placeRecipe/chayTauHuSotCaChua.jpg";
+import chayNamKhoTieu from "/images/placeRecipe/chayNamKhoTieu.jpg";
+import tomHapNuocDua from "/images/placeRecipe/tomHapNuocDua.jpg";
+import tomTempura from "/images/placeRecipe/tomTempura.jpg";
+import tomXotBoToi from "/images/placeRecipe/tomXotBoToi.jpg";
+import tomSuHapBia from "/images/placeRecipe/tomSuHapBia.jpg";
+import tomRangTrungMuoi from "/images/placeRecipe/tomRangTrungMuoi.jpg";
 
 import websiteIcon from "/images/icon/Web.svg";
 import apiIcon from "/images/icon/API.svg";
@@ -329,4 +339,144 @@ export const placesToGo = [
       },
     ],
   },
+  {
+    id: 5,
+    name: "Món Chay",
+    imageSrc: placesChay,
+    description: [
+      "Ngày nay, không chỉ riêng những nhà tu mới ăn chay, mà các món chay còn dần trở nên phổ biến hơn với nhiều người. Món chay dễ chế biến và dễ ăn.",
+      "Tổng hợp Top các món chay ngon thích hợp khi ăn vào ngày rằm hoặc cúng ông bà, bạn cùng theo dõi nhé.",
+    ],
+    places: [
+      {
+        id: 1,
+        name: "Tàu hủ sốt cà chua",
+        description: [
+          "Thật không thể phủ nhận rằng tàu hủ sốt cà chua là món chay ngon cực kỳ quen thuộc trong các bữa cơm. Mùi hương thơm ngon của sốt cà chua, hòa cùng vị béo nhẹ của tàu hủ tạo nên món tàu hủ sốt cà chua hấp dẫn, tròn vị.",
+        ],
+        images: [
+          {
+            id: 1,
+            imageSrc: chayTauHuSotCaChua,
+            imageAlt: "Tàu hủ sốt cà chua",
+          },
+        ],
+      },
+      {
+        id: 2,
+        name: "Chả giò chay",
+        description: [
+          "Chả giò chay được biết đến là món chay ngon đặc trưng trong nền ẩm thực thức ăn chay tịnh. Chả giò chay khác với chả giò nhân tôm cua hay tôm thịt mà bạn thường ăn, phần nhân bên trong của món này chỉ bao gồm một số loại rau, củ cùng với miến, tàu hủ cắt miếng và nấm hương.",
+          "Món chả giò chay hiện nay không chỉ xuất hiện trong các bữa cơm gia đình, mà trong các tiệc cưới có bàn dành cho những người ăn chay, thì món chả giò chay sẽ là món khai vị hấp dẫn, tuyệt vời.",
+        ],
+        images: [
+          {
+            id: 1,
+            imageSrc: chayChaGioChay,
+            imageAlt: "Chả giò chay",
+          },
+        ],
+      },
+      {
+        id: 3,
+        name: "Nấm kho tiêu",
+        description: [
+          "Nấm kho tiêu ăn với cơm trắng cực kỳ ngon và hấp dẫn. Tuy chỉ là một món ăn đơn giản, nhưng nấm chứa nhiều dưỡng chất tốt cho cơ thể. Nước kho sền sệt, cay thơm ăn cùng với cơm trắng rất thấm vị. Nấm kho tiêu còn là món chay ngon, bổ dưỡng, rất được người trung niên ưa thích.",
+        ],
+        images: [
+          {
+            id: 1,
+            imageSrc: chayNamKhoTieu,
+            imageAlt: "Nấm Kho Tiêu",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 6,
+    name: "Tôm",
+    imageSrc: placesTom,
+    description: [
+      "Nếu bạn là 1 tín đồ của hải sản thì làm sao mà bỏ qua được những con tôm tươi ngon với nhiều cách chế biến đa dạng phong phú mà vẫn mang đậm hương vị của biển cả."
+    ],
+    places: [
+      {
+        id: 1,
+        name: "Tempura tôm rau củ hải sản",
+        description: [
+          "Tempura tôm rau củ là món ăn có nguồn gốc từ Nhật Bản với lớp bột chiên giòn rụm vàng óng bao phủ bên ngoài. Tôm tươi ngọt kết hợp với các loại rau củ giòn tan tạo nên món ăn hấp dẫn cả về hình thức lẫn hương vị.",
+          "Món tempura này thường được ăn kèm với nước chấm thanh nhẹ hoặc tương đậu nành pha chế, khiến bạn khó lòng cưỡng lại được."
+        ],
+        images: [
+          {
+            id: 1,
+            imageSrc: tomTempura,
+            imageAlt: "Tempura tôm rau củ hải sản",
+          },
+        ],
+      },
+      {
+        id: 2,
+        name: "Tôm sú hấp bia",
+        description: [
+          "Tôm sú hấp bia là món ăn đơn giản nhưng đậm đà hương vị biển. Tôm được hấp cùng với bia và các nguyên liệu như sả, gừng, tạo nên vị ngọt tự nhiên của tôm, hòa quyện với hương thơm thoang thoảng của bia.",
+          "Món này giữ nguyên được độ tươi ngon của tôm, thịt chắc và ngọt. Đây là món ăn lý tưởng trong các buổi tiệc hoặc dịp sum họp gia đình."
+        ],
+        images: [
+          {
+            id: 1,
+            imageSrc: tomSuHapBia,
+            imageAlt: "Tôm sú hấp bia",
+          },
+        ],
+      },
+      {
+        id: 3,
+        name: "Tôm xốt bơ tỏi",
+        description: [
+          "Tôm xốt bơ tỏi là món ăn đậm đà, hấp dẫn với vị béo của bơ và hương thơm nồng của tỏi phi. Tôm được xào nhanh trên lửa lớn để giữ được độ tươi và ngọt của thịt.",
+          "Sốt bơ tỏi thấm đều từng con tôm, tạo nên món ăn có hương vị thơm ngon khó cưỡng. Món này thích hợp dùng với bánh mì hoặc cơm nóng, rất được lòng thực khách."
+        ],
+        images: [
+          {
+            id: 1,
+            imageSrc: tomXotBoToi,
+            imageAlt: "Tôm xốt bơ tỏi",
+          },
+        ],
+      },
+      {
+        id: 4,
+        name: "Tôm rang trứng muối",
+        description: [
+          "Tôm rang trứng muối là món ăn đầy lôi cuốn với sự hòa quyện giữa vị mặn béo của trứng muối và vị ngọt tự nhiên từ tôm. Lớp sốt trứng muối vàng ươm, sánh mịn bao phủ từng con tôm giòn giòn khiến bạn khó cưỡng lại.",
+          "Món này không chỉ thơm ngon mà còn rất bổ dưỡng, thích hợp làm món chính trong các bữa ăn gia đình hay tiệc tùng."
+        ],
+        images: [
+          {
+            id: 1,
+            imageSrc: tomRangTrungMuoi,
+            imageAlt: "Tôm rang trứng muối",
+          },
+        ],
+      },
+      {
+        id: 5,
+        name: "Tôm hấp nước dừa",
+        description: [
+          "Tôm hấp nước dừa là món ăn thanh mát, mang hương vị ngọt dịu tự nhiên từ nước dừa tươi. Tôm sau khi hấp thấm đượm vị ngọt và béo nhẹ từ dừa, thịt tôm mềm và săn chắc.",
+          "Món này thường được dùng kèm với muối tiêu chanh hoặc nước mắm ớt để tăng thêm hương vị thơm ngon và đậm đà."
+        ],
+        images: [
+          {
+            id: 1,
+            imageSrc: tomHapNuocDua,
+            imageAlt: "Tôm hấp nước dừa",
+          },
+        ],
+      },
+    ],
+  },
+  
 ];
