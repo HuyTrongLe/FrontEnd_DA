@@ -311,7 +311,7 @@ const RecipeDetail = () => {
                 <span className="text-green-600">Miễn Phí</span>
               ) : (
                 <>
-                  {recipe.price.toLocaleString()} Xu
+                  {recipe.price.toLocaleString()}
                   <img src="/images/icon/dollar.png" alt="coins" className="h-5 w-5 mb-1 ml-1 inline-block" />
                 </>
               )}

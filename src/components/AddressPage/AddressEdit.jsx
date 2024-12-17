@@ -345,12 +345,11 @@ const AddressEdit = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
+    <div className="flex flex-col md:flex-row justify-center items-start p-4 space-y-8 md:space-y-0 md:space-x-8">
       <Sidebar />
-      
-      <div className="flex-1 p-4">
-        <Container className="py-4">
-          <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="flex flex-col">
+        <Container className="">
+          <div className="section-center w-[1140px] bg-white p-4 rounded-lg shadow-md flex flex-col text-xl">
             <div className="flex justify-between items-center mb-6 border-b pb-4">
               <div className="flex items-center space-x-3">
                 <FaMapMarked className="text-2xl text-orange-500" />

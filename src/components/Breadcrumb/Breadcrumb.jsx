@@ -16,7 +16,7 @@ const Breadcrumb = () => {
     recharge: "Nạp xu",
     coinTransaction: "Lịch sử giao dịch",
     termsofpurchase: "Điều khoản và điều kiện mua tiền xu",
-    faq: "Frequently Asked Questions",
+    faq: "Câu hỏi thường gặp",
     product: "Tìm kiếm sản phẩm",
     report: "Khiếu nại",
     "list-saved-recipe": "Công thức đã lưu",
@@ -31,7 +31,14 @@ const Breadcrumb = () => {
     places: "Khám phá món ăn",
     "recipe-detail" : "Chi tiết công thức",
     "book-detail": "Chi tiết sách nấu ăn",
-    withdrawrequest: "Yêu cầu rút tiền"
+    withdrawrequest: "Yêu cầu rút tiền",
+    "update-to-seller" : "Đăng kí bán hàng",
+    "form-updated-role" : "Thông tín đăng kí bán hàng",
+    "cart" : "Giỏ hàng",
+    "create-recipe-seller" : "Thêm công thức nấu ăn",
+    "add-book-customer" : "Thêm sách mới",
+    "add-ebook-customer" : "Thêm sách điện tử mới"
+
   };
 
   return (
