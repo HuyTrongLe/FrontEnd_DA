@@ -30,7 +30,14 @@ function RecipeCard({ recipe }) {
         {/* Recipe Price */}
         <div className="text-center text-gray-300 text-lg font-semibold mb-4">
           <span className="text-pink-700">
-            {recipe.price === 0 ? "Miễn Phí" : recipe.price.toLocaleString() + " Xu"}
+            {recipe.price === 0 ? (
+              <span className="text-green-600">Miễn Phí</span>
+            ) : (
+              <>
+                {recipe.price.toLocaleString()} Xu
+                <img src="/images/icon/dollar.png" alt="coins" className="h-5 w-5 mb-1 ml-1 inline-block" />
+              </>
+            )}
           </span>
         </div>
 

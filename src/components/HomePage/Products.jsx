@@ -75,8 +75,14 @@ const Product = () => {
                                                     {recipe.recipeName}
                                                 </h5>
                                                 <p className="text-red-600 font-bold mb-2 text-lg">
-                                                    {Intl.NumberFormat('de-DE').format(recipe.price)}
-                                                    <img src="/images/icon/dollar.png" alt="coins" className="h-5 w-5 mb-1 ml-1 inline-block" />
+                                                    {recipe.price === 0 ? (
+                                                        <span className='text-green-600'>Miễn Phí</span>
+                                                    ) : (
+                                                        <span>
+                                                            {Intl.NumberFormat('de-DE').format(recipe.price)} Xu
+                                                            <img src="/images/icon/dollar.png" alt="coins" className="h-5 w-5 mb-1 ml-1 inline-block" />
+                                                        </span>
+                                                    )}
                                                 </p>
                                                 <a
                                                     href={`/recipe-detail/${recipe.recipeId}`}
@@ -123,8 +129,15 @@ const Product = () => {
                                                     {ebook.ebookName}
                                                 </h5>
                                                 <p className="text-red-600 font-bold mb-2 text-lg">
-                                                    {Intl.NumberFormat('de-DE').format(ebook.price)}
-                                                    <img src="/images/icon/dollar.png" alt="coins" className="h-5 w-5 mb-1 ml-1 inline-block" />
+                                                    {ebook.price === 0 ? (
+                                                        <span className='text-green-600'>Miễn Phí</span>
+                                                    ) : (
+                                                        <span>
+                                                            {Intl.NumberFormat('de-DE').format(ebook.price)} Xu
+                                                            <img src="/images/icon/dollar.png" alt="coins" className="h-5 w-5 mb-1 ml-1 inline-block" />
+                                                        </span>
+                                                    )}
+
                                                 </p>
                                                 <a
                                                     href={`/ebook/${ebook.ebookId}`}

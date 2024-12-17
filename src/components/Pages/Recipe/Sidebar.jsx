@@ -109,9 +109,9 @@ function Sidebar({ onFilterChange }) {
           Giá
         </label>
         <ul className="space-y-3">
-          {[ // Các mức giá cho món ăn
+          {[
             { label: "Miễn phí", value: "0-0" },
-            { label: ">0 Xu - 20,000 Xu", value: "0-20000.000" },
+            { label: ">0 Xu - 20,000 Xu", value: "1-20000.000" },
             { label: ">20,000 Xu - 50,000 Xu", value: "20000.000-50000.000" },
             { label: ">50,000 Xu", value: "50000.000 - 1000000000.000" },
           ].map((priceRange, index) => (
