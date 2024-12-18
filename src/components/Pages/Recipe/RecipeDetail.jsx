@@ -8,7 +8,7 @@ import {
   getCountRecipeRateByRecipeId,
   checkRated,
 } from "../../services/RecipeRateService";
-
+import { getImagesByRecipeId, } from "../../services/SellerService/Api";
 import {
   getAccountData,
   fetchPurchasedRecipes,
@@ -31,7 +31,7 @@ const RecipeDetail = () => {
   const accountId = decryptData(Cookies.get("UserId"));
   const { recipeId } = useParams();
   const [recipe, setRecipe] = useState(null);
-  const [imageUrl, setImageUrl] = useState([]);
+  const [images, setImages] = useState([]); // Thay đổi thành mảng hình ảnh
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -49,6 +49,7 @@ const RecipeDetail = () => {
   const [hover, setHover] = useState(null);
   const [checkRatedStatus, setcheckRated] = useState("");
   const [roleaccountonline, setRoleaccountonline] = useState("");
+  const [mainImage, setMainImage] = useState(null);
   const handleOpenModal = () => {
     setShowModal(true);
   };
@@ -88,7 +89,6 @@ const RecipeDetail = () => {
   const getPurchasedRecipes = async () => {
     const storedUserId = decryptData(Cookies.get("UserId"));
     setLoading(true);
-
     try {
       const purchasedIds = await fetchPurchasedRecipes(storedUserId); // Gọi hàm từ file api/recipeApi.js
       setPurchasedRecipes(purchasedIds);
@@ -115,16 +115,18 @@ const RecipeDetail = () => {
       receiverName: accountName,
       content: text,
     });
-    const addNotification = () => {
-      const newNotificationData = {
-        accountId: createById,
-        content: text,
-        date: new Date().toISOString(),
-        status: 1,
+    if(accountId!==createById){
+      const addNotification = () => {
+        const newNotificationData = {
+          accountId: createById,
+          content: text,
+          date: new Date().toISOString(),
+          status: 1,
+        };
+        createNotification(newNotificationData); // Không cần await
       };
-      createNotification(newNotificationData); // Không cần await
-    };
-    addNotification();
+      addNotification();
+    }
   };
 
   useEffect(() => {
@@ -137,6 +139,7 @@ const RecipeDetail = () => {
           checkrateddata,
           createbyName,
           infoacconline,
+          imagesData,
         ] = await Promise.all([
           getRecipeById(recipeId),
           getRecipeRatePoint(recipeId),
@@ -144,6 +147,7 @@ const RecipeDetail = () => {
           checkRated(recipeId, accountId),
           getAccountById((await getRecipeById(recipeId)).createById), // Lưu ý: có thể cần kiểm tra cách gọi này
           getAccountById(accountId),
+          getImagesByRecipeId(recipeId),
         ]);
         setcheckRated(checkrateddata?.ratePoint);
         //console.log('Đã rated: ', checkRatedStatus);
@@ -154,7 +158,8 @@ const RecipeDetail = () => {
         setRoleaccountonline(infoacconline.roleId);
         //console.log('Đã rated: ', data);
         setAccountName(createbyName.userName);
-        setImageUrl(data.images);
+        setImages(imagesData);
+        setMainImage(imagesData[0]?.imageUrl);
       } catch (err) {
         console.error(err);
       } finally {
@@ -175,7 +180,6 @@ const RecipeDetail = () => {
   if (loading) return <p>Đang tải dữ liệu...</p>;
   if (error) return <p>{error}</p>;
   if (!recipe) return <p>Không tải được công thức này.</p>;
-
   const isLongDescription = recipe.description.length > 300;
   const displayDescription = showFullDescription
     ? recipe.description
@@ -186,28 +190,235 @@ const RecipeDetail = () => {
     navigate(`/editrecipecustomer-recipe/${recipeId}`);
   };
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-white shadow-md rounded-lg grid grid-cols-2 gap-8 mb-5">
+    <div className="max-w-6xl mx-auto p-6 bg-gray-50 shadow-md rounded-lg grid grid-cols-2 gap-8 mb-5">
       {/* Phần bên trái với lớp nền */}
       <div className="relative">
-        {/* Lớp nền */}
-        <div className="absolute inset-0 bg-gray-100 rounded-lg shadow-inner p-6 -z-10"></div>
-
         {/* Phần hình ảnh */}
-        <div className="mb-4 z-10 flex flex-wrap gap-4">
-          {imageUrl.map((image, index) => (
-            <img
-              key={index}
-              src={image.imageUrl || "https://via.placeholder.com/150"}
-              alt={recipe.recipeName}
-              className="w-full rounded-lg shadow-lg"
-            />
-          ))}
+        <div className="mb-24 z-10 flex flex-wrap gap-4">
+          {/* Recipe Image Section */}
+          <div className="relative w-full md:w-2/3 flex-1">
+            {/* Main Recipe Image */}
+            <div className="w-full h-96 rounded-lg overflow-hidden shadow-xl">
+              <img
+                src={mainImage}
+                alt="Main Recipe"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {/* Thumbnail Images */}
+            <div className="mt-4 flex gap-4 overflow-x-auto">
+              {images && images.length > 0 ? (
+                images.map((image, index) => (
+                  <div
+                    key={index}
+                    className="w-20 h-20 rounded-lg overflow-hidden shadow-md cursor-pointer"
+                    onClick={() => setMainImage(image.imageUrl)}
+                  >
+                    <img
+                      src={image.imageUrl || ""}
+                      alt={`Recipe image ${index + 1}`}
+                      className="w-full h-full object-cover hover:opacity-75"
+                    />
+                  </div>
+                ))
+              ) : (
+                <p className="text-lg text-gray-500">No images available</p>
+              )}
+            </div>
+          </div>
+
         </div>
-
-        {/* Các nút */}
-
         {/* Các chính sách */}
-        <div className="space-y-2 z-10"></div>
+        <div className="space-y-2 z-10">
+          {/* <Rating /> */}
+          <div className="rating-container">
+            <div className="rating-header">
+              <h3>Đánh giá sản phẩm</h3>
+            </div>
+            <div className="rating-summary">
+              <div className="rating-score">
+                <span className="score">{roundedAverageRate}</span>
+                <span className="out-of">/5</span>
+              </div>
+              <div className="rating-stars">
+                <div className="stars">
+                  {[...Array(maxStars)].map((_, index) => {
+                    let starColor = "#e4e5e9"; // Màu sao chưa được đánh giá
+                    if (index < fullStars) {
+                      starColor = "#ffc107"; // Màu sao đầy
+                    } else if (index === fullStars && halfStar) {
+                      starColor = "#ffc107"; // Màu sao nửa
+                    }
+                    return (
+                      <label key={index}>
+                        <input
+                          type="radio"
+                          name="rating"
+                          value={index + 1}
+                          disabled // Disable không cho click
+                          style={{ display: "none" }}
+                        />
+                        <FaStar className="star" size={20} color={starColor} />
+                      </label>
+                    );
+                  })}
+                </div>
+                <div className="rating-count">({countRate} đánh giá)</div>
+              </div>
+            </div>
+            <div className="rating-bars">
+              {[5, 4, 3, 2, 1].map((star) => (
+                <div key={star} className="rating-bar">
+                  <span>{star} sao</span>
+                  <div className="bar">
+                    <div className="fill" style={{ width: "0%" }}></div>
+                  </div>
+                  <span>0%</span>
+                </div>
+              ))}
+            </div>
+            {showModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+                  <h2 className="text-2xl font-bold mb-4 text-center">
+                    Cho chúng tôi biết bạn thích công thức này như thế nào
+                  </h2>
+                  <div className="text-center">
+                    {[...Array(5)].map((star, index) => {
+                      const currentRating = index + 1;
+                      return (
+                        <label key={index}>
+                          <input
+                            type="radio"
+                            name="rating"
+                            value={currentRating}
+                            onChange={(e) => setRatepoint(e.target.value)}
+                            style={{ display: "none" }}
+                          />
+                          <FaStar
+                            className="star"
+                            size={50}
+                            color={
+                              currentRating <= (hover || ratepoint)
+                                ? "#ffc107"
+                                : "#e4e5e9"
+                            }
+                            onMouseEnter={() => setHover(currentRating)}
+                            onMouseLeave={() => setHover(null)}
+                          />
+                        </label>
+                      );
+                    })}
+                    {!checkRatedStatus ? (
+                      <p>Điểm đánh giá của bạn là {ratepoint}</p>
+                    ) : (
+                      <>
+                        <p
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          Đánh giá cuối cùng {checkRatedStatus}{" "}
+                          <FaStar
+                            color="#ffc107"
+                            style={{ marginLeft: "2px", marginBottom: "1.5px" }}
+                          />
+                        </p>
+                        <p>Đánh giá hiện tại {ratepoint}</p>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex justify-end mt-4">
+                    <button
+                      className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2"
+                      onClick={() => setShowModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="bg-custom-orange hover:bg-orange-500 text-white font-bold py-2 px-4 rounded"
+                      onClick={() => {
+                        handleNotification(
+                          `${accountOnline} đã đánh giá ${ratepoint} sao về công thức ${recipe.recipeName} của bạn`
+                        );
+                        checkRatedStatus
+                          ? handleUpdateRecipeRate()
+                          : handleSaveRecipeRate();
+                      }}
+                    >
+                      {checkRatedStatus ? "Update Ratepoint" : "Save Ratepoint"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "10px", // Thêm khoảng cách giữa các nút
+            }}
+          >
+            {/* Nút "Give your stars for this recipe" */}
+            <button
+              className="write-review-button"
+              style={{ width: "45%", height: "70px" }}
+              onClick={handleOpenModal}
+            >
+              <span role="img" aria-label="star">
+                ✨
+              </span>{" "}
+              Đánh giá công thức
+            </button>
+
+            {/* Nút "Mua công thức này" chỉ hiển thị khi chưa mua */}
+            {!purchasedRecipes.has(recipe.recipeId) && (
+              <button
+                className="write-review-button"
+                style={{ width: "45%", height: "70px" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  HandleBuy(
+                    recipe,
+                    accountId,
+                    purchasedRecipes,
+                    getAccountInfo,
+                    getPurchasedRecipes,
+                    dataAccount,
+                    navigate
+                  );
+                }}
+              >
+                <span role="img" aria-label="buy">
+                  🛒
+                </span>{" "}
+                Mua công thức này
+              </button>
+            )}
+
+            {/* Nút "Sửa đổi công thức" chỉ hiển thị khi đã mua */}
+            {purchasedRecipes.has(recipe.recipeId) && (
+              <button
+                className="write-review-button"
+                style={{ width: "45%", height: "70px" }}
+                onClick={() => {
+                  {
+                    handleEditRecipe(recipe.recipeId);
+                  }
+                }}
+              >
+                <span role="img" aria-label="edit">
+                  ✏️
+                </span>{" "}
+                Sửa đổi công thức
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Right Section */}
@@ -247,8 +458,8 @@ const RecipeDetail = () => {
           </h2>
           <ul className="text-gray-700 text-lg">
             <li>
-              <span className="font-semibold">Mã hàng:</span>{" "}
-              {recipe.numberOfService}
+              <span className="font-semibold">Phần ăn dành cho:</span>{" "}
+              {recipe.numberOfService} người
             </li>
             <li>
               <span className="font-semibold">Sự dinh dưỡng:</span>{" "}
@@ -356,194 +567,6 @@ const RecipeDetail = () => {
           )}
         </div>
       </div>
-      {/* <Rating /> */}
-      <div className="rating-container">
-        <div className="rating-header">
-          <h3>Đánh giá sản phẩm</h3>
-        </div>
-        <div className="rating-summary">
-          <div className="rating-score">
-            <span className="score">{roundedAverageRate}</span>
-            <span className="out-of">/5</span>
-          </div>
-          <div className="rating-stars">
-            <div className="stars">
-              {[...Array(maxStars)].map((_, index) => {
-                let starColor = "#e4e5e9"; // Màu sao chưa được đánh giá
-                if (index < fullStars) {
-                  starColor = "#ffc107"; // Màu sao đầy
-                } else if (index === fullStars && halfStar) {
-                  starColor = "#ffc107"; // Màu sao nửa
-                }
-                return (
-                  <label key={index}>
-                    <input
-                      type="radio"
-                      name="rating"
-                      value={index + 1}
-                      disabled // Disable không cho click
-                      style={{ display: "none" }}
-                    />
-                    <FaStar className="star" size={20} color={starColor} />
-                  </label>
-                );
-              })}
-            </div>
-            <div className="rating-count">({countRate} đánh giá)</div>
-          </div>
-        </div>
-        <div className="rating-bars">
-          {[5, 4, 3, 2, 1].map((star) => (
-            <div key={star} className="rating-bar">
-              <span>{star} sao</span>
-              <div className="bar">
-                <div className="fill" style={{ width: "0%" }}></div>
-              </div>
-              <span>0%</span>
-            </div>
-          ))}
-        </div>
-        {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-              <h2 className="text-2xl font-bold mb-4 text-center">
-                Let us know how you liked this recipe
-              </h2>
-              <div className="text-center">
-                {[...Array(5)].map((star, index) => {
-                  const currentRating = index + 1;
-                  return (
-                    <label key={index}>
-                      <input
-                        type="radio"
-                        name="rating"
-                        value={currentRating}
-                        onChange={(e) => setRatepoint(e.target.value)}
-                        style={{ display: "none" }}
-                      />
-                      <FaStar
-                        className="star"
-                        size={50}
-                        color={
-                          currentRating <= (hover || ratepoint)
-                            ? "#ffc107"
-                            : "#e4e5e9"
-                        }
-                        onMouseEnter={() => setHover(currentRating)}
-                        onMouseLeave={() => setHover(null)}
-                      />
-                    </label>
-                  );
-                })}
-                {!checkRatedStatus ? (
-                  <p>Your star rating is {ratepoint}</p>
-                ) : (
-                  <>
-                    <p
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      Your last star rating was {checkRatedStatus}{" "}
-                      <FaStar
-                        color="#ffc107"
-                        style={{ marginLeft: "2px", marginBottom: "1.5px" }}
-                      />
-                    </p>
-                    <p>Your star rating this time is {ratepoint}</p>
-                  </>
-                )}
-              </div>
-              <div className="flex justify-end mt-4">
-                <button
-                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2"
-                  onClick={() => setShowModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="bg-custom-orange hover:bg-orange-500 text-white font-bold py-2 px-4 rounded"
-                  onClick={() => {
-                    handleNotification(
-                      `${accountOnline} đã đánh giá ${ratepoint} sao về công thức ${recipe.recipeName} của bạn`
-                    );
-                    checkRatedStatus
-                      ? handleUpdateRecipeRate()
-                      : handleSaveRecipeRate();
-                  }}
-                >
-                  {checkRatedStatus ? "Update Ratepoint" : "Save Ratepoint"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: "10px", // Thêm khoảng cách giữa các nút
-        }}
-      >
-        {/* Nút "Give your stars for this recipe" */}
-        <button
-          className="write-review-button"
-          style={{ width: "45%", height: "70px" }}
-          onClick={handleOpenModal}
-        >
-          <span role="img" aria-label="star">
-            ✨
-          </span>{" "}
-          Đánh giá cho công thức này
-        </button>
-
-        {/* Nút "Mua công thức này" chỉ hiển thị khi chưa mua */}
-        {!purchasedRecipes.has(recipe.recipeId) && (
-          <button
-            className="write-review-button"
-            style={{ width: "45%", height: "70px" }}
-            onClick={(e) => {
-              e.stopPropagation();
-              HandleBuy(
-                recipe,
-                accountId,
-                purchasedRecipes,
-                getAccountInfo,
-                getPurchasedRecipes,
-                dataAccount,
-                navigate
-              );
-            }}
-          >
-            <span role="img" aria-label="buy">
-              🛒
-            </span>{" "}
-            Mua công thức này
-          </button>
-        )}
-
-        {/* Nút "Sửa đổi công thức" chỉ hiển thị khi đã mua */}
-        {purchasedRecipes.has(recipe.recipeId) && (
-          <button
-            className="write-review-button"
-            style={{ width: "45%", height: "70px" }}
-            onClick={() => {
-              {
-                handleEditRecipe(recipe.recipeId);
-              }
-            }}
-          >
-            <span role="img" aria-label="edit">
-              ✏️
-            </span>{" "}
-            Sửa đổi công thức
-          </button>
-        )}
-      </div>
       <div
         className="max-w-10xl mx-auto p-6 bg-white shadow-md rounded-lg flex justify-center"
         style={{ width: "205%" }}
@@ -552,6 +575,7 @@ const RecipeDetail = () => {
           <CommentRecipes
             recipeId={recipeId}
             createById={createById}
+            accountIdonline={accountId}
             roleaccountonline={roleaccountonline}
           />
         </div>

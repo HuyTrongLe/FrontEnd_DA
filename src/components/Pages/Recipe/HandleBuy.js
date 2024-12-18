@@ -122,7 +122,7 @@ const HandleBuy = async (
     const dataPR = {
       recipeId: recipe.recipeId,
       customerId: accountId,
-      numberOfServices: recipe.numberOfService,
+      numberOfService: recipe.numberOfService,
       nutrition: recipe.nutrition,
       tutorial: recipe.tutorial,
       ingredient: recipe.ingredient,

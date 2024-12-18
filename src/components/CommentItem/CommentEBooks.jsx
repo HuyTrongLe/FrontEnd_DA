@@ -1,26 +1,27 @@
-import { useState, useEffect} from "react"
+import { useState, useEffect } from "react"
 import Comment from "./Comment";
 import CommentForm from "./CommentForm";
 import Cookies from 'js-cookie';
-import { createComment, UpdateComment, RemoveComment,getCommentsbyEBookId } from "../services/CommentService"
+import { createComment, UpdateComment, RemoveComment, getCommentsbyEBookId } from "../services/CommentService"
 import "../../assets/styles/Components/commentstyle.css"
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import {useSocket} from "../../App"
-import {createNotification} from "../services/NotificationService"
-import {getAccountById} from "../services/AccountService"
-import {getEbookById} from "../services/EbookService"
+import { useSocket } from "../../App"
+import { createNotification } from "../services/NotificationService"
+import { getAccountById } from "../services/AccountService"
+import { getEbookById } from "../services/EbookService"
 import Swal from 'sweetalert2';
 import { decryptData } from "../Encrypt/encryptionUtils";
-
-const Comments = ({ebookId,createById,roleaccountonline}) => {
+import { useNavigate } from "react-router-dom";
+const Comments = ({ ebookId, createById,accountIdonline, roleaccountonline }) => {
     const accountId = decryptData(Cookies.get("UserId"));
     const [backendComments, setBackendComments] = useState([]); // All comments
     const [visibleComments, setVisibleComments] = useState(3); // Number of comments to display initially
     const [activeComment, setActiveComment] = useState(null); //  Tracks active comment for editing
     const backgroundPromise = [];
-    const [createbyName,setCreatebyName] =useState(null);
+    const [createbyName, setCreatebyName] = useState(null);
     const [ebook, setEbook] = useState(null)
+    const navigate = useNavigate();
     const Comments = backendComments
         .filter((comment) => comment.rootCommentId === null)
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -61,7 +62,7 @@ const Comments = ({ebookId,createById,roleaccountonline}) => {
             content: text,
             date: new Date().toISOString(),
             status: 1,
-            bookId:null,
+            bookId: null,
             ebookId,
             customerId: accountId,
             recipeId: null,
@@ -75,8 +76,19 @@ const Comments = ({ebookId,createById,roleaccountonline}) => {
     }
     const handleWriteClick = (text) => {
         if (!accountId) {
-            //alert("Vui lòng đăng nhập!!"); // Redirect to login page if not logged in
-            toast.error(`Please log in to be able to comment!!`);
+            Swal.fire({
+                text: "Bạn cần đăng nhập để bình luận được. Bạn có muốn đăng nhập không?",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Đăng nhập",
+                cancelButtonText: "Không"
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    navigate("/login");
+                }
+            });
         } else {
             addComment(text); // Call your addComment function if logged in
         }
@@ -87,18 +99,20 @@ const Comments = ({ebookId,createById,roleaccountonline}) => {
         socket.emit("sendNotification", {
             senderName: accountOnline,
             receiverName: createbyName,
-            content:text,
+            content: text,
         });
-        const addNotification = () => {
-            const newNotificationData = {
-                accountId: createById,
-                content: text,
-                date: new Date().toISOString(),
-                status: 1,
+        if(accountIdonline!==createById){
+            const addNotification = () => {
+                const newNotificationData = {
+                    accountId: createById,
+                    content: text,
+                    date: new Date().toISOString(),
+                    status: 1,
+                };
+                createNotification(newNotificationData); // Không cần await
             };
-            createNotification(newNotificationData); // Không cần await
-        };
-        addNotification();
+            addNotification();
+        }    
     };
 
     useEffect(() => {
@@ -115,8 +129,8 @@ const Comments = ({ebookId,createById,roleaccountonline}) => {
                 console.error(err);
             }
         };
-        fetchComment();    
-    }, [ebookId,backgroundPromise,createById]);
+        fetchComment();
+    }, [ebookId, backgroundPromise, createById]);
     const addComment = async (text, rootcommentId = null) => {
 
         const newCommentData = {
@@ -139,10 +153,10 @@ const Comments = ({ebookId,createById,roleaccountonline}) => {
             <ToastContainer />
             <div className="comments">
                 <h3 className="comments-title">Bình luận</h3>
-                <CommentForm 
-                submitLabel="Gửi" 
-                handleSubmit={handleWriteClick} 
-                onClick={() => handleNotification(`${accountOnline} đã bình luận về sách điện tử ${ebook.ebookName} của bạn`)} 
+                <CommentForm
+                    submitLabel="Gửi"
+                    handleSubmit={handleWriteClick}
+                    onClick={() => handleNotification(`${accountOnline} đã bình luận về sách điện tử ${ebook.ebookName} của bạn`)}
                 />
                 <div className="comments-container">
                     {Comments.slice(0, visibleComments).map((comment) => {
@@ -166,10 +180,10 @@ const Comments = ({ebookId,createById,roleaccountonline}) => {
                 </div>
                 {visibleComments < Comments.length && (
                     <button
-                        className="see-more-button"
+                        className="see-more-button text-blue-500 underline"
                         onClick={() => setVisibleComments(visibleComments + 3)}
                     >
-                        See more
+                        Xem thêm
                     </button>
                 )}
             </div>

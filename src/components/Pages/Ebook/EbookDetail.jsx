@@ -16,7 +16,7 @@ function EbookDetail() {
   const [isPurchased, setIsPurchased] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
-
+  const accountIdOnline = decryptData(Cookies.get("UserId"));
   useEffect(() => {
     const fetchEbookDetail = async () => {
       try {
@@ -240,6 +240,7 @@ function EbookDetail() {
                 <CommentEBooks 
                   ebookId={ebookId}
                   createById={ebook.createById}
+                  accountIdonline ={accountIdOnline}
                   roleaccountonline={roleaccountonline}
                 />
               </div>

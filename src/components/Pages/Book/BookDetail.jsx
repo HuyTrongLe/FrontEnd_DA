@@ -74,16 +74,18 @@ const BookDetail = () => {
             receiverName: accountName,
             content: text,
         });
-        const addNotification = () => {
-            const newNotificationData = {
-                accountId: createById,
-                content: text,
-                date: new Date().toISOString(),
-                status: 1,
+        if (createById !== customerId){
+            const addNotification = () => {
+                const newNotificationData = {
+                    accountId: createById,
+                    content: text,
+                    date: new Date().toISOString(),
+                    status: 1,
+                };
+                createNotification(newNotificationData); // Không cần await
             };
-            createNotification(newNotificationData); // Không cần await
-        };
-        addNotification();
+            addNotification();
+        }   
     };
 
     useEffect(() => {
@@ -518,7 +520,7 @@ const BookDetail = () => {
                                     <button
                                         className="bg-custom-orange hover:bg-orange-500 text-white font-bold py-2 px-4 rounded"
                                         onClick={() => {
-                                            handleNotification(`${accountOnline} đã đánh giá ${ratepoint} sao về sách ${book.recipeName} của bạn`);
+                                            handleNotification(`${accountOnline} đã đánh giá ${ratepoint} sao về sách ${book.bookName} của bạn`);
                                             checkRatedStatus ? handleUpdateRecipeRate() : handleSaveRecipeRate();
                                         }}
                                     >
@@ -536,7 +538,7 @@ const BookDetail = () => {
                 </div>
                 <div className="max-w-10xl mx-auto p-6 bg-white shadow-md rounded-lg flex justify-center" style={{ width: "205%" }}>
                     <div className="w-full max-w-6xl">
-                        <CommentBooks bookId={bookId} createById={createById} roleaccountonline={roleaccountonline} />
+                        <CommentBooks bookId={bookId} createById={createById} customerIdOnline={customerId} roleaccountonline={roleaccountonline} />
                     </div>
                 </div>
             </div>

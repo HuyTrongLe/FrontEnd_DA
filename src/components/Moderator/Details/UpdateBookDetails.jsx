@@ -206,9 +206,15 @@ const BookDetail = () => {
             <button
               onClick={() => {
                 const statusText = status === 1 ? "Xác nhận" : "Khóa";
-                handleNotification(
-                  `Mod ${accountOnline} đã ${statusText} sách ${book.bookName} của bạn`
-                );
+                if(censorNote){
+                  handleNotification(
+                    `Mod ${accountOnline} đã ${statusText} sách ${book.bookName} của bạn`
+                  );
+                }else{
+                  handleNotification(
+                    `Mod ${accountOnline} đã ${statusText} sách ${book.bookName} của bạn với lý do : ${censorNote}!!!`
+                  );
+                }
                 handleSave();
               }}
               className="flex items-center justify-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition transform duration-300 hover:scale-105"

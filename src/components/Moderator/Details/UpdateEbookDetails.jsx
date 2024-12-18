@@ -6,7 +6,8 @@ import Swal from "sweetalert2";
 import { updateEbook } from "../../services/ModeratorService/Api";
 import { FaSave, FaArrowLeft } from "react-icons/fa";
 import { decryptData } from "../../Encrypt/encryptionUtils";
-
+import { useSocket } from "../../../App";
+import { createNotification } from "../../services/NotificationService";
 function EbookDetail() {
   const { ebookId } = useParams();
   const [ebook, setEbook] = useState(null);
@@ -16,6 +17,7 @@ function EbookDetail() {
   const [error, setError] = useState(null);
   const [status, setStatus] = useState();
   const [censorNote, setCensorNote] = useState();
+    const { socket, accountOnline } = useSocket();
   useEffect(() => {
     const fetchEbookDetail = async () => {
       try {
@@ -109,6 +111,23 @@ function EbookDetail() {
       return ebook.category.name;
     return "Đang cập nhật";
   };
+  const handleNotification = (text) => {
+      socket.emit("sendNotification", {
+        senderName: accountOnline,
+        receiverName: ebook.createBy?.userName,
+        content: text,
+      });
+      const addNotification = () => {
+        const newNotificationData = {
+          accountId: ebook.createBy?.accountId,
+          content: text,
+          date: new Date().toISOString(),
+          status: 1,
+        };
+        createNotification(newNotificationData); // Không cần await
+      };
+      addNotification();
+    };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -196,7 +215,14 @@ function EbookDetail() {
               <div className="flex space-x-4">
                 <button
                   onClick={() => {
-                    status === 1 ? "Xác nhận" : "Khóa";
+                    const statusText = status === 1 ? "Xác nhận" : "Khóa";
+                    if(censorNote){
+                      handleNotification(
+                        `Mod ${accountOnline} đã ${statusText} công thức ${ebook.ebookName} của bạn`
+                      );
+                    }else{
+                      `Mod ${accountOnline} đã ${statusText} công thức ${ebook.ebookName} của bạn với lý do ${censorNote}`
+                    }
                     handleSave();
                   }}
                   className="flex items-center justify-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition transform duration-300 hover:scale-105"

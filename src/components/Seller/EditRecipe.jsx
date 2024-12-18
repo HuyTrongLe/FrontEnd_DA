@@ -160,7 +160,7 @@ const EditRecipe = () => {
       recipeName,
       price,
       numberOfService,
-      status,
+      status:-1,
       nutrition,
       tutorial,
       video,

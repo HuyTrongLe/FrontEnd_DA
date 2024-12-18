@@ -7,23 +7,24 @@ import "../../assets/styles/Components/commentstyle.css"
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getCommentsbyRecipeId } from "../services/CommentService"
-
-import {getAccountById} from "../services/AccountService"
-import {getRecipeById} from "../services/RecipeService"
-import {createNotification} from "../services/NotificationService"
+import { useNavigate } from "react-router-dom";
+import { getAccountById } from "../services/AccountService"
+import { getRecipeById } from "../services/RecipeService"
+import { createNotification } from "../services/NotificationService"
 import Swal from 'sweetalert2';
 import { decryptData } from "../Encrypt/encryptionUtils";
 
 //import PropTypes from "prop-types";
-import {useSocket} from "../../App"
-const Comments = ({ recipeId, createById,roleaccountonline}) => {
+import { useSocket } from "../../App"
+const Comments = ({ recipeId, createById,accountIdonline, roleaccountonline }) => {
     const accountId = decryptData(Cookies.get("UserId"));
     const [backendComments, setBackendComments] = useState([]); // All comments
     const [visibleComments, setVisibleComments] = useState(3); // Number of comments to display initially
     const [activeComment, setActiveComment] = useState(null); //  Tracks active comment for editing
     const [recipe, setRecipe] = useState(null)
     const backgroundPromise = [];
-    const [createbyName,setCreatebyName] =useState(null);
+    const [createbyName, setCreatebyName] = useState(null);
+    const navigate = useNavigate();
     const Comments = backendComments
         .filter((comment) => comment.rootCommentId === null)
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -76,8 +77,19 @@ const Comments = ({ recipeId, createById,roleaccountonline}) => {
     }
     const handleWriteClick = (text) => {
         if (!accountId) {
-            //alert("Vui lòng đăng nhập!!"); // Redirect to login page if not logged in
-            toast.error(`Please log in to be able to comment!!`);
+            Swal.fire({
+                text: "Bạn cần đăng nhập để bình luận được. Bạn có muốn đăng nhập không?",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Đăng nhập",
+                cancelButtonText: "Không"
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    navigate("/login");
+                }
+            });
         } else {
             addComment(text); // Call your addComment function if logged in      
         }
@@ -88,18 +100,21 @@ const Comments = ({ recipeId, createById,roleaccountonline}) => {
         socket.emit("sendNotification", {
             senderName: accountOnline,
             receiverName: createbyName,
-            content:text,
+            content: text,
         });
-        const addNotification = () => {
-            const newNotificationData = {
-                accountId: createById,
-                content: text,
-                date: new Date().toISOString(),
-                status: 1,
+        if(accountIdonline!==createById){
+            const addNotification = () => {
+                const newNotificationData = {
+                    accountId: createById,
+                    content: text,
+                    date: new Date().toISOString(),
+                    status: 1,
+                };
+                createNotification(newNotificationData); // Không cần await
             };
-            createNotification(newNotificationData); // Không cần await
-        };
-        addNotification();
+            addNotification();
+        }
+       
     };
 
     useEffect(() => {
@@ -117,7 +132,7 @@ const Comments = ({ recipeId, createById,roleaccountonline}) => {
             }
         };
         fetchComment();
-    }, [recipeId, backgroundPromise,createById]);
+    }, [recipeId, backgroundPromise, createById]);
 
     const addComment = async (text, rootCommentId = null) => {
         const newCommentData = {
@@ -144,7 +159,7 @@ const Comments = ({ recipeId, createById,roleaccountonline}) => {
                 <CommentForm
                     submitLabel="Gửi"
                     handleSubmit={handleWriteClick}
-                    onClick={() => handleNotification(`${accountOnline} đã bình luận về công thức ${recipe.recipeName} của bạn`)} 
+                    onClick={() => handleNotification(`${accountOnline} đã bình luận về công thức ${recipe.recipeName} của bạn`)}
                 />
                 <div className="comments-container">
                     {Comments.slice(0, visibleComments).map((comment) => {
@@ -168,10 +183,11 @@ const Comments = ({ recipeId, createById,roleaccountonline}) => {
                 </div>
                 {visibleComments < Comments.length && (
                     <button
-                        className="see-more-button text-white"
+                        className="see-more-button text-blue-500 underline"
                         onClick={() => setVisibleComments(visibleComments + 3)}
+
                     >
-                        See more
+                        Xem thêm
                     </button>
                 )}
             </div>
@@ -180,7 +196,7 @@ const Comments = ({ recipeId, createById,roleaccountonline}) => {
 };
 
 // // Validate socket prop type
-    // Comments.propTypes = {
-    //     socket: PropTypes.object, // Ensures socket is passed as a required object prop
-    // };
+// Comments.propTypes = {
+//     socket: PropTypes.object, // Ensures socket is passed as a required object prop
+// };
 export default Comments;

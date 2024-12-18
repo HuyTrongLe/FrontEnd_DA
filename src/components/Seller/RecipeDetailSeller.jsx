@@ -72,9 +72,7 @@ const RecipeDetail = () => {
 
         <div className="space-y-4">
           <p className="text-lg">{recipe?.description || "N/A"}</p>
-          <p className="text-lg">
-            <strong>Tạo bởi:</strong> {accountID?.userName || "N/A"}
-          </p>
+          
           <div className="flex flex-col md:flex-row items-start space-x-4">
             {/* Recipe Image Section */}
             <div className="md:w-2/3 relative">
@@ -125,10 +123,10 @@ const RecipeDetail = () => {
                 {recipe?.price || "N/A"} xu
               </p>
               <p className="text-lg">
-                <strong>Sự dinh dưỡng:</strong> {recipe?.nutrition || "N/A"}
+                <strong>Dinh dưỡng:</strong> {recipe?.nutrition || "N/A"}
               </p>
               <p className="text-lg">
-                <strong>Năng lượng:</strong> {recipe?.nutrition || "N/A"} kcal
+                <strong>Năng lượng:</strong> {recipe?.energy || "N/A"} kcal
               </p>
               <p className="text-lg mb-2">
                 <strong className="text-gray-800">Ngày tạo:</strong>{" "}
@@ -206,7 +204,7 @@ const RecipeDetail = () => {
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline"
               >
-                Watch Video
+                Xem Video hướng dẫn
               </a>
             ) : (
               "N/A"
@@ -222,11 +220,6 @@ const RecipeDetail = () => {
               ? "Bị khóa"
               : "N/A"}
           </p>
-          <div className="relative flex items-center mb-8">
-            <hr className="flex-grow border-t border-black-300" />
-            <img src={SpoonIcon} alt="Icon" className="mx-2 w-6 h-6" />
-          </div>
-          <CommentRecipes recipeId={recipeId} createById={accountID} />
           <div className="relative flex items-center mb-8">
             <hr className="flex-grow border-t border-black-300" />
             <img src={SpoonIcon} alt="Icon" className="mx-2 w-6 h-6" />

@@ -20,7 +20,7 @@ const IncomeManagement = () => {
     totalCoins: 0
   });
 
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b'];
+  const COLORS = ['#3b82f6', '#d91010', '#f59e0b'];
 
   useEffect(() => {
     fetchIncomeData();
@@ -65,12 +65,13 @@ const IncomeManagement = () => {
         .reduce((sum, t) => sum + t.moneyFluctuations, 0);
 
       const totalExpenses = transactions
-        .filter(t => t && t.moneyFluctuations && t.moneyFluctuations < 0)
-        .reduce((sum, t) => sum + t.moneyFluctuations, 0);
+        .filter(t => (t && t.moneyFluctuations && t.moneyFluctuations < 0) || 
+                    (t && t.coinFluctuations && t.coinFluctuations < 0))
+        .reduce((sum, t) => sum + (t.moneyFluctuations || 0) + (t.coinFluctuations || 0), 0);
 
       const totalCoins = transactions
-        .filter(t => t && t.coinFluctuations != null)
-        .reduce((sum, t) => sum + Math.abs(t.coinFluctuations), 0);
+        .filter(t => t && t.coinFluctuations && t.coinFluctuations > 0)
+        .reduce((sum, t) => sum + t.coinFluctuations, 0);
 
       setStatistics({
         totalEarnings,
@@ -101,8 +102,12 @@ const IncomeManagement = () => {
           }
         }
         
-        if (transaction.coinFluctuations != null) {
-          acc[month].coins += Math.abs(transaction.coinFluctuations);
+        if (transaction.coinFluctuations) {
+          if (transaction.coinFluctuations > 0) {
+            acc[month].coins += transaction.coinFluctuations;
+          } else {
+            acc[month].expenses += Math.abs(transaction.coinFluctuations);
+          }
         }
         
         return acc;
@@ -166,8 +171,7 @@ const IncomeManagement = () => {
               />
               <FaCalendarAlt className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
             </div>
-            
-            <select
+            {/* <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
               className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -176,15 +180,14 @@ const IncomeManagement = () => {
               <option value="book">Chỉ Sách</option>
               <option value="ebook">Chỉ E-book</option>
               <option value="recipe">Chỉ Công Thức</option>
-            </select>
+            </select> */}
           </div>
-          
-          <button
+          {/* <button
             onClick={() => console.log('Exporting...')}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             <FaDownload /> Xuất Excel
-          </button>
+          </button> */}
         </div>
 
         {/* Updated Statistics Cards */}
@@ -192,10 +195,10 @@ const IncomeManagement = () => {
           <StatCard
             title="Tổng Thu Nhập"
             value={statistics.totalEarnings}
-            color="text-green-600"
+            color="text-blue-600"
           />
           <StatCard
-            title="Tổng Chi Phí"
+            title="Tổng Xu Đã Rút"
             value={statistics.totalExpenses}
             color="text-red-600"
           />
@@ -231,7 +234,7 @@ const IncomeManagement = () => {
                   <Tooltip formatter={(value) => value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })} />
                   <Legend />
                   <Bar dataKey="earnings" name="Thu Nhập" fill="#3b82f6" />
-                  <Bar dataKey="expenses" name="Chi Phí" fill="#10b981" />
+                  <Bar dataKey="expenses" name="Xu đã rút" fill="#d91010" />
                   <Bar dataKey="coins" name="Coin" fill="#f59e0b" />
                 </BarChart>
               </ResponsiveContainer>
@@ -247,7 +250,7 @@ const IncomeManagement = () => {
                   <Pie
                     data={[
                       { name: 'Thu Nhập', value: statistics.totalEarnings },
-                      { name: 'Chi Phí', value: statistics.totalExpenses },
+                      { name: 'Xu đã rút', value: Math.abs(statistics.totalExpenses) },
                       { name: 'Coin', value: statistics.totalCoins }
                     ]}
                     cx="50%"
@@ -280,7 +283,7 @@ const IncomeManagement = () => {
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tháng</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thu Nhập</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chi Phí</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Xu đã rút</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coin</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng</th>
                   </tr>
@@ -293,13 +296,13 @@ const IncomeManagement = () => {
                         {item.earnings.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.expenses.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
+                        {`-${item.expenses.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}`}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {item.coins.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {(item.earnings + item.expenses + item.coins).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
+                        {(item.earnings - item.expenses + item.coins).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
                       </td>
                     </tr>
                   ))}

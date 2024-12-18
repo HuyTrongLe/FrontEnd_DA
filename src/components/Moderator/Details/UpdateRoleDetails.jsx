@@ -280,16 +280,16 @@ const AccountDetails = () => {
               let content = "";
               if (newStatus === 1) {
                 statusText = "duyệt";
-              } else if (newStatus === -2) {
+              } else if (newStatus === 0) {
                 statusText = "từ chối";
                 content = censorNote;
-              } else if (newStatus === 0) {
-                statusText = "khóa";
+              } else if (newStatus === 2) {
+                statusText = "cho phép bạn cập nhật lại";
                 content = censorNote;
               }
               if (content) {
                 handleNotification(
-                  `${content} Mod ${accountOnline} đã ${statusText} thông tin làm người bán hàng của bạn`
+                  `Mod ${accountOnline} đã ${statusText} thông tin làm người bán hàng của bạn với lý do: ${content}!!!`
                 );
               } else {
                 handleNotification(

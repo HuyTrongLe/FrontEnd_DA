@@ -70,7 +70,7 @@ const RecipeList = () => {
     },
     {
       name: "Giá",
-      selector: (row) => row.price || "Chưa xác định",
+      selector: (row) => row.price || "Miễn phí",
       sortable: true,
     },
     {

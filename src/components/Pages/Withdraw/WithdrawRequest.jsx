@@ -13,6 +13,8 @@ const WithDrawRequest = () => {
     const [UserId, setUserId] = useState('');
     const [account, setAccount] = useState('');
     const [amount, setAmount] = useState(0);
+
+    const [status, setStatus] = useState('')
     const [bankAccountQR, setBankAccountQR] = useState(null);
     const [error, setError] = useState(null);
     const conversionRate = 0.80;
@@ -31,6 +33,7 @@ const WithDrawRequest = () => {
 
                 setAccount(response);
                 setBankAccountQR(response.accountProfile.bankAccountQR);
+                setStatus(response.accountProfile.status);
             }
             else {
                 window.location.href = '/login';
@@ -132,10 +135,12 @@ const WithDrawRequest = () => {
                                     <p className="card-text font-semibold text-xl my-4"><span className="material-icons">
                                         payments
                                     </span> Tiền nhận được = <span className='text-2xl text-green-500'>{Math.round(amount * conversionRate)}₫</span></p>
-                                    <button type="submit" className="btn btn-success mt-12 flex p-2 font-semibold text-2xl"><span className="material-icons">
-                                        attach_money
-                                    </span>Gửi Yêu Cầu</button>
-
+                                    {status !== 2 ? (
+                                        <button type="submit" className="btn btn-success mt-12 flex p-2 font-semibold text-2xl"><span className="material-icons">
+                                        attach_money</span>Gửi Yêu Cầu</button>
+                                    ) : (
+                                        <p className="text-red-600">Bạn có thông tin chưa cập nhật hoàn tất hoặc chưa được duyệt</p>
+                                    )}
                                 </form>
                             </div>
                         </div>

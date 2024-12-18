@@ -12,8 +12,9 @@ import { getAccountById } from "../services/AccountService"
 import { getBookById } from "../services/BookService"
 import Swal from 'sweetalert2';
 import { decryptData } from "../Encrypt/encryptionUtils";
+import { useNavigate } from "react-router-dom";
 
-const Comments = ({ bookId, createById, roleaccountonline }) => {
+const Comments = ({ bookId, createById,customerIdOnline, roleaccountonline }) => {
     const accountId = decryptData(Cookies.get("UserId"));
     const [backendComments, setBackendComments] = useState([]); // All comments
     const [visibleComments, setVisibleComments] = useState(3); // Number of comments to display initially
@@ -21,6 +22,7 @@ const Comments = ({ bookId, createById, roleaccountonline }) => {
     const backgroundPromise = [];
     const [createbyName, setCreatebyName] = useState(null);
     const [book, setBook] = useState(null)
+    const navigate = useNavigate();
     const Comments = backendComments
         .filter((comment) => comment.rootCommentId === null)
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -76,8 +78,19 @@ const Comments = ({ bookId, createById, roleaccountonline }) => {
     }
     const handleWriteClick = (text) => {
         if (!accountId) {
-            //alert("Vui lòng đăng nhập!!"); // Redirect to login page if not logged in
-            toast.error(`Please log in to be able to comment!!`);
+            Swal.fire({
+                text: "Bạn cần đăng nhập để bình luận được. Bạn có muốn đăng nhập không?",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Đăng nhập",
+                cancelButtonText: "Không"
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    navigate("/login");
+                }
+            });
         } else {
             addComment(text); // Call your addComment function if logged in
         }
@@ -90,16 +103,18 @@ const Comments = ({ bookId, createById, roleaccountonline }) => {
             receiverName: createbyName,
             content: text,
         });
-        const addNotification = () => {
-            const newNotificationData = {
-                accountId: createById,
-                content: text,
-                date: new Date().toISOString(),
-                status: 1,
+        if(customerIdOnline!==createById){
+            const addNotification = () => {
+                const newNotificationData = {
+                    accountId: createById,
+                    content: text,
+                    date: new Date().toISOString(),
+                    status: 1,
+                };
+                createNotification(newNotificationData); // Không cần await
             };
-            createNotification(newNotificationData); // Không cần await
-        };
-        addNotification();
+            addNotification();
+        }
     };
 
     useEffect(() => {
@@ -168,10 +183,10 @@ const Comments = ({ bookId, createById, roleaccountonline }) => {
                 </div>
                 {visibleComments < Comments.length && (
                     <button
-                        className="see-more-button"
+                        className="see-more-button text-blue-500 underline"
                         onClick={() => setVisibleComments(visibleComments + 3)}
                     >
-                        See more
+                        Xem thêm
                     </button>
                 )}
             </div>

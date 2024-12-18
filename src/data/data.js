@@ -32,11 +32,11 @@ import ecommerceIcon from "/images/icon/ECOMMERCE.svg";
 import supportIcon from "/images/icon/SUPPORT.svg";
 
 export const leftLinks = [
-  { href: "/", title: "Home" },
-  { href: "/recharge", title: "Recharge" },
+  { href: "/", title: "Trang chủ" },
+  { href: "/recharge", title: "Nạp xu" },
 ];
 export const rightLinks = [
-  { href: "/#contact", title: "Contact" },
+  { href: "/#contact", title: "Liên hệ" },
   { href: "/faq", title: "FAQ" },
 ];
 
