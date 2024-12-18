@@ -261,6 +261,7 @@ const AccountDetails = () => {
             <option value={-1}>Chờ xác nhận</option>
             <option value={1}>Xác nhận</option>
             <option value={0}>Từ chối</option>
+            <option value={2}>Cập nhật thông tin</option>
           </select>
         </div>
         <div>

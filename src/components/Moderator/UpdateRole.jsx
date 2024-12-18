@@ -5,6 +5,7 @@ import {
   FaRegClock,
   FaInfoCircle,
   FaFilter,
+  FaSyncAlt,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import DataTable from "react-data-table-component";
@@ -68,13 +69,13 @@ const AccountProfile = () => {
       style: { fontSize: "14px" }, // Reduced font size for smaller text
     },
     {
-      name: "Chân dung",
+      name: "Ảnh CMND mặt trước",
       cell: (row) =>
-        row.portrait ? (
+        row.frontIdcard ? (
           <img
-            alt="Chân dung"
+            alt="Ảnh CMND mặt trước"
             className="w-24 h-24 object-cover rounded-md" // Reduced size for image
-            src={row.portrait}
+            src={row.frontIdcard}
           />
         ) : (
           "Không có"
@@ -98,6 +99,11 @@ const AccountProfile = () => {
           <FaCheckCircle
             style={{ color: "green", fontSize: "18px" }}
             title="Đã xác nhận"
+          />
+        ): row.status === 2 ? (
+          <FaSyncAlt
+            style={{ color: "orange", fontSize: "18px" }}
+            title="Cập nhật thông tin"
           />
         ) : (
           <FaRegClock
@@ -158,6 +164,7 @@ const AccountProfile = () => {
               <option value="0">Từ chối</option>
               <option value="-1">Chờ xác nhận</option>
               <option value="1">Đã xác nhận</option>
+              <option value="2">Cập nhật thông tin</option>
             </select>
             <button
               className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"

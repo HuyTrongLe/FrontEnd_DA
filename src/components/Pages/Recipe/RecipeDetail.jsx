@@ -498,7 +498,7 @@ const RecipeDetail = () => {
           <span role="img" aria-label="star">
             ✨
           </span>{" "}
-          Give your stars for this recipe
+          Đánh giá cho công thức này
         </button>
 
         {/* Nút "Mua công thức này" chỉ hiển thị khi chưa mua */}
