@@ -107,8 +107,7 @@ export const updateRecipeRate = async (recipeId, accountId,ratePoint) => {
 // API kiểm tra đã rate hay chưa
 export const checkRated = async (recipeId, accountId) => {
     if (!accountId) {
-        console.error('Invalid accountId:', accountId);
-        return false;
+        return 
     }
     try {
         // Gọi API với URL mới `/RecipeRate/{recipeId}/{accountId}`

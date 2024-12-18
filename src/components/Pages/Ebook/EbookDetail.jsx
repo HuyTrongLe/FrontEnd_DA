@@ -6,7 +6,7 @@ import Cookies from 'js-cookie';
 import { createEbookTransaction } from '../../services/Transaction';
 import { toast } from 'react-hot-toast';
 import Swal from 'sweetalert2';
-
+import { decryptData } from "../../Encrypt/encryptionUtils";
 function EbookDetail() {
   const { ebookId } = useParams();
   const [ebook, setEbook] = useState(null);

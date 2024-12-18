@@ -24,7 +24,7 @@ export const createNotification = async (NotificationData) => {
 export const getNotificationbyAccountId = async (accountId) => {
     try {
         if (!accountId) {
-            throw new Error("Invalid accountId");
+            return
         }
         const response = await apiInstance.get(`https://rmrbdapi.somee.com/odata/Notification?$filter=accountId eq ${accountId}`);
         return response.data;

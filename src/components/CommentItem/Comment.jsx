@@ -22,7 +22,7 @@ const Comment = ({
     const timePassed = new Date() - new Date(comment.date) < fiveMinutes;
     const canReply = Boolean(currentUserId);
     const canEdit = currentUserId === comment.customerId && timePassed;
-    const canDelete = currentUserId === comment.customerId && timePassed || createByUserId===currentUserId
+    const canDelete = currentUserId === comment.customerId && timePassed || createByUserId === currentUserId
         || roleaccountonline === 3;
     const commentedAt = new Date(comment.date).toLocaleString('vi-VN', {
         hour: '2-digit',
@@ -48,8 +48,8 @@ const Comment = ({
             try {
                 const createbyName = await getAccountById(comment.customerId);
                 setAccountName(createbyName.userName);
-            } catch (err) {
-                console.error(err);
+            } catch {
+                // Không làm gì khi có lỗi
             }
         };
         fetcAccountData();
@@ -176,6 +176,6 @@ Comment.propTypes = {
     addComment: PropTypes.func.isRequired,
     setActiveComment: PropTypes.func.isRequired,
     rootCommentId: PropTypes.number,
-    roleaccountonline:PropTypes.number
+    roleaccountonline: PropTypes.number
 };
 export default Comment;
