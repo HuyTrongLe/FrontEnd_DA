@@ -68,13 +68,13 @@ const AccountProfile = () => {
       style: { fontSize: "14px" }, // Reduced font size for smaller text
     },
     {
-      name: "Ảnh CMND mặt trước",
+      name: "Chân dung",
       cell: (row) =>
-        row.frontIdcard ? (
+        row.portrait ? (
           <img
-            alt="Ảnh CMND mặt trước"
+            alt="Chân dung"
             className="w-24 h-24 object-cover rounded-md" // Reduced size for image
-            src={row.frontIdcard}
+            src={row.portrait}
           />
         ) : (
           "Không có"

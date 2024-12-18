@@ -75,7 +75,12 @@ export const updateBook = async (bookId, updatedBook) => {
   });
   return result.data;
 };
-
+export const updateEbook = async (ebookId, updatedEbook) => {
+  const result = await axios.put(`${API_URL}/Ebook/${ebookId}`, updatedEbook, {
+    headers: DEFAULT_HEADERS,
+  });
+  return result.data;
+};
 export const getBook = async (bookId) => {
   const result = await axios.get(`${API_URL}/Book/${bookId}`, {
     headers: DEFAULT_HEADERS,

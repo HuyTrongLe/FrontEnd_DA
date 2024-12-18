@@ -10,6 +10,7 @@ import Cookies from "js-cookie";
 import DataTable from "react-data-table-component";
 import { listEbook } from "../services/ModeratorService/Api";
 import { decryptData } from "../Encrypt/encryptionUtils";
+import { useNavigate } from "react-router-dom";
 
 const EbookList = () => {
   const [ebooks, setebooks] = useState([]);
@@ -18,7 +19,7 @@ const EbookList = () => {
   const [showFilter, setShowFilter] = useState(false);
   const [filterText, setFilterText] = useState(""); // For ebook name filter
   const [filterStatus, setFilterStatus] = useState(""); // For ebook status filter
-
+  const navigate = useNavigate();
   useEffect(() => {
     setcensorID(decryptData(Cookies.get("UserId")));
   }, []);
@@ -34,7 +35,9 @@ const EbookList = () => {
     }
   };
 
-  const handleDetails = async (accountId, newDetails) => {};
+  const handleDetails = (ebookId) => {
+    navigate(`/update-ebook-details/${ebookId}`);
+  };
 
   useEffect(() => {
     fetchebooks();

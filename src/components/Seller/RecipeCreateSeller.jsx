@@ -50,6 +50,7 @@ const RecipeCustomer = () => {
     fetchTags();
   }, []);
 
+  // Lấy danh sách tag 
   const fetchTags = async () => {
     try {
       const response = await fetchActiveTags();
@@ -76,9 +77,12 @@ const RecipeCustomer = () => {
       newErrors.price = "Vui lòng nhập giá hợp lệ.";
     }
     if (!nutrition) newErrors.nutrition = "Thông tin dinh dưỡng là cần thiết.";
-    if (!tutorial) newErrors.tutorial = "Hướng dẫn là cần thiết.";
-    if (!video) newErrors.video = "Video là bắt buộc.";
-    if (!ingredient) newErrors.ingredient = "Thành phần là bắt buộc.";
+    if (!tutorial || tutorial.some((step) => step.trim() === "")) {
+      newErrors.tutorial = "Các bước không được để trống.";
+    }
+    if (!ingredient || ingredient.some((ing) => ing.trim() === "")) {
+      newErrors.ingredient = "Nguyên liệu không được để trống.";
+    }
     if (!description) newErrors.description = "Mô tả là bắt buộc.";
     if (!energy) newErrors.energy = "Năng lượng là bắt buộc.";
 
@@ -89,7 +93,7 @@ const RecipeCustomer = () => {
       newErrors.recipeImage = "Ít nhất một hình ảnh là bắt buộc.";
     }
     if (selectedTagIds.length === 0) {
-      newErrors.selectedTagIds = "Vui lòng chọn ít nhất một thẻ.";
+      newErrors.tag = "Vui lòng chọn ít nhất một thẻ.";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -187,9 +191,9 @@ const RecipeCustomer = () => {
 
     // Bắt đầu quá trình tải lên
     setIsUploading(true);
-    setUploadComplete(false); // Đảm bảo "Lưu hoàn tất" không hiển thị khi bắt đầu tải lên
+    setUploadComplete(false);
 
-    // Giả lập tải lên trong 2 giây (bạn có thể thay bằng API thật)
+    // Giả lập tải lên trong 2 giây
     setTimeout(() => {
       // Sau khi tải lên hoàn tất, cập nhật trạng thái
       setIsUploading(false);
@@ -201,9 +205,8 @@ const RecipeCustomer = () => {
   const removeImage = (index) => {
     setRecipeImage((prevImages) => {
       const updatedImages = prevImages.filter((_, i) => i !== index);
-      // Nếu không còn ảnh nào, ẩn trạng thái "Lưu hoàn tất"
       if (updatedImages.length === 0) {
-        setUploadComplete(false); // Ẩn "Lưu hoàn tất"
+        setUploadComplete(false);
       }
       return updatedImages;
     });
@@ -248,6 +251,12 @@ const RecipeCustomer = () => {
     const newIngredients = [...ingredient];
     newIngredients[index] = value;
     setIngredients(newIngredients);
+    // Xóa lỗi khi có thay đổi trong input
+    if (errors.ingredient) {
+      const newErrors = { ...errors };
+      delete newErrors.ingredient;
+      setErrors(newErrors);
+    }
   };
 
   const addIngredient = () => {
@@ -259,11 +268,16 @@ const RecipeCustomer = () => {
     setIngredients(newIngredients);
   };
 
-  //
   const handleTutorialChange = (index, value) => {
     const updatedTutorial = [...tutorial];
     updatedTutorial[index] = value;
     setTutorial(updatedTutorial);
+    // Xóa lỗi khi có thay đổi trong input
+    if (errors.tutorial) {
+      const newErrors = { ...errors };
+      delete newErrors.tutorial;
+      setErrors(newErrors);
+    }
   };
 
   const addTutorialStep = () => {
@@ -282,6 +296,12 @@ const RecipeCustomer = () => {
       : [...selectedTagIds, tagId];
 
     setSelectedTagIds(updatedSelection);
+    // Xóa lỗi tag nếu đã chọn
+    if (updatedSelection.length > 0 && errors.tag) {
+      const newErrors = { ...errors };
+      delete newErrors.tag;
+      setErrors(newErrors);
+    }
   };
 
   const handleNotification = (text) => {
@@ -301,7 +321,6 @@ const RecipeCustomer = () => {
         status: 1,
       };
 
-      // Gọi hàm tạo thông báo (không cần await nếu bạn không cần phải chờ)
       createNotification(newNotificationData);
     }
   };
@@ -322,6 +341,7 @@ const RecipeCustomer = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Recipe Title */}
             <Col>
+              <h2 className="text-xl font-bold mb-4">Tên công thức</h2>
               <Form.Group controlId="recipeName">
                 {errors.recipeName && (
                   <p className="text-danger">{errors.recipeName}</p>
@@ -335,7 +355,9 @@ const RecipeCustomer = () => {
                   className="w-full px-2 py-2 border border-gray-300 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder-gray-400 "
                 />
               </Form.Group>
+
               <Form.Group controlId="description" className="mt-4">
+                <h2 className="text-xl font-bold mb-4">Chi tiết</h2>
                 {errors.description && (
                   <p className="text-danger">{errors.description}</p>
                 )}
@@ -353,6 +375,8 @@ const RecipeCustomer = () => {
             {/* Photo Upload */}
             <div className="relative">
               <Form.Group controlId="recipeImage">
+                <h2 className="text-xl font-bold mb-4">Hình ảnh</h2>
+
                 {errors.recipeImage && (
                   <p className="text-sm text-red-500">{errors.recipeImage}</p>
                 )}
@@ -435,6 +459,9 @@ const RecipeCustomer = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="col-span-1">
               <h2 className="text-xl font-bold mb-4">Nguyên liệu</h2>
+              {errors.ingredient && (
+                <p className="text-danger mt-2">{errors.ingredient}</p>
+              )}
               {ingredient.map((ingredient_chirld, index) => (
                 <Row className="mb-2" key={index}>
                   <Col>
@@ -469,7 +496,7 @@ const RecipeCustomer = () => {
                 </Row>
               ))}
               <Button
-                variant="outline-warning" // Use Bootstrap's orange variant for the border
+                variant="outline-warning"
                 onClick={addIngredient}
                 className="custom-button d-flex align-items-center mt-4"
               >
@@ -480,14 +507,15 @@ const RecipeCustomer = () => {
             <div className="col-span-1">
               {/* Directions Section */}
               <h2 className="text-xl font-bold mb-4">Các bước</h2>
+              {errors.tutorial && (
+                <p className="text-danger mt-2">{errors.tutorial}</p>
+              )}
               {tutorial.map((step, index) => (
                 <Row className="mb-2" key={index}>
                   <Col>
                     <Form.Group controlId={`tutorial-${index}`}>
                       <Form.Label>Bước {index + 1}</Form.Label>
-                      {errors.tutorial && errors.tutorial[index] && (
-                        <p className="text-danger">{errors.tutorial[index]}</p>
-                      )}
+
                       <Form.Control
                         as="textarea"
                         placeholder={`${

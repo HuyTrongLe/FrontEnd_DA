@@ -35,6 +35,7 @@ const BookDetail = () => {
 
     const [createById, setCreateById] = useState(null);
     const accountId = decryptData(Cookies.get("UserId"));
+    const customerId = decryptData(Cookies.get("UserId"));
     //rating
     const [showModal, setShowModal] = useState(false);
     const [ratepoint, setRatepoint] = useState("");
@@ -49,7 +50,7 @@ const BookDetail = () => {
     };
     const handleSaveRecipeRate = async () => {
         try {
-            await saveBookRate(ratepoint, accountId, bookId);
+            await saveBookRate(ratepoint, customerId, bookId);
             setShowModal(false); // Đóng modal khi lưu thành công
             window.location.reload();
         } catch (error) {
@@ -59,7 +60,7 @@ const BookDetail = () => {
 
     const handleUpdateRecipeRate = async () => {
         try {
-            await updateBookRate(ratepoint, accountId, bookId);
+            await updateBookRate(ratepoint, customerId, bookId);
             setShowModal(false); // Đóng modal khi lưu thành công
             window.location.reload();
         } catch (error) {

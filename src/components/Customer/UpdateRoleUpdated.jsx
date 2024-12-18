@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { Container, Row, Col, Button, Form } from "react-bootstrap";
-import Cookies from "js-cookie";
 import Tesseract from "tesseract.js";
 import "react-datepicker/dist/react-datepicker.css";
+import { useParams } from "react-router-dom";
 import { FaTrashAlt, FaCloudUploadAlt } from "react-icons/fa";
-import { useSocket } from "../../App";
-import { getAccountByRoleId } from "../services/AccountService";
-import { createNotification } from "../services/NotificationService";
-import { updateToSeller } from "../services/CustomerService/CustomerService";
-import { decryptData } from "../Encrypt/encryptionUtils";
+import {
+  getAccountProfile,
+  updateToSellerResubmit,
+  convertURLToFile,
+} from "../services/CustomerService/CustomerService";
 import { useNavigate } from "react-router-dom";
-const UpdateToSeller = () => {
-  const [accountID, setAccountID] = useState();
+
+const UpdateRoleUpdated = () => {
+  const { accountID } = useParams();
   const [portrait, setPortrait] = useState(null);
   const [portraitPreview, setPortraitPreview] = useState(null);
   const [bankAccountQR, setBankAccountQR] = useState(null);
@@ -24,47 +25,62 @@ const UpdateToSeller = () => {
   const [dateOfBirth, setDateOfBirth] = useState(null);
   const [idCardNumber, setIdCardNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [accountProfile, setAccountProfileData] = useState({});
   const navigate = useNavigate();
+
   // State lưu lỗi cho từng trường
   const [errors, setErrors] = useState({
     portrait: "",
     frontIDCard: "",
     backIDCard: "",
-    bankAccountQR: "",
+    bankAccountQR: "",  
     idCardNumber: "",
     dateOfBirth: "",
   });
-  const { socket, accountOnline } = useSocket();
-  const [listModer, setListModer] = useState([]);
 
   useEffect(() => {
-    const fetchReport = async () => {
+    // Định nghĩa một hàm bất đồng bộ để lấy dữ liệu tài khoản
+    const fetchData = async () => {
       try {
-        const storedUserId = decryptData(Cookies.get("UserId"));
-        if (storedUserId) {
-          setAccountID(storedUserId);
+        // Gọi API để lấy thông tin tài khoản theo `accountID`
+        const data = await getAccountProfile(accountID);
+        setAccountProfileData(data);
+        setFrontIDCardPreview(data.frontIdcard);
+        setBackIDCardPreview(data.backIdcard);
+        setPortraitPreview(data.portrait);
+        setBankAccountQRPreview(data.bankAccountQR);
+
+        // Nếu có ảnh mặt trước của thẻ ID (frontIdcard), chuyển URL thành file và xử lý
+        if (data.frontIdcard) {
+          const file = await convertURLToFile(
+            data.frontIdcard,
+            "frontIdcard.jpg"
+          );
+
+          // Gọi hàm xử lý file ảnh mặt trước để lấy số CCCD và ngày sinh
+          handlefrontIDCardFileChange({ target: { files: [file] } });
         }
-        const stored = await getAccountByRoleId();
-        const extractedModeratornames = stored.map((account) => ({
-          Id: account.accountId,
-          userName: account.userName,
-        }));
-        setListModer(extractedModeratornames);
-      } catch (err) {
-        console.error(err);
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: error.message,
+        });
       }
     };
-    fetchReport();
-  }, []);
-  // Xử lý post thông tin lên db cho bảng AccountProfile
+    fetchData();
+  }, [accountID]);
+
   const handleSaveAccountProfile = async () => {
     let formErrors = {};
-    if (!portrait) formErrors.portrait = "Vui lòng chọn ảnh chân dung.";
-    if (!frontIDCard)
+
+    // Kiểm tra xem các trường dữ liệu đã được điền đầy đủ chưa
+    if (!portraitPreview) formErrors.portrait = "Vui lòng chọn ảnh chân dung.";
+    if (!frontIDCardPreview)
       formErrors.frontIDCard = "Vui lòng chọn ảnh căn cước mặt trước.";
-    if (!backIDCard)
+    if (!backIDCardPreview)
       formErrors.backIDCard = "Vui lòng chọn ảnh căn cước mặt sau.";
-    if (!bankAccountQR)
+    if (!bankAccountQRPreview)
       formErrors.bankAccountQR = "Vui lòng chọn mã QR tài khoản ngân hàng.";
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
@@ -75,7 +91,7 @@ const UpdateToSeller = () => {
       });
       return;
     }
-    // Cửa sổ confirm cho người dùng
+
     const result = await Swal.fire({
       title: "Bạn có chắc chắn muốn gửi thông tin không?",
       text: "Thông tin bạn đã điền sẽ được gửi đi.",
@@ -86,47 +102,69 @@ const UpdateToSeller = () => {
       confirmButtonText: "Có, gửi thông tin",
       cancelButtonText: "Hủy",
     });
-    // Trả về nếu người dùng cancel
+
     if (!result.isConfirmed) return;
 
     const formData = new FormData();
-    formData.append("portrait", portrait);
-    formData.append("bankAccountQR", bankAccountQR);
-    formData.append("frontIDCard", frontIDCard);
-    formData.append("backIDCard", backIDCard);
+    // Chuyển ảnh thành file
+    if (portraitPreview && typeof portraitPreview === "string") {
+      const file = await convertURLToFile(portraitPreview, "portrait.jpg");
+      formData.append("portrait", file);
+    } else {
+      formData.append("portrait", portrait);
+    }
+
+    if (frontIDCardPreview && typeof frontIDCardPreview === "string") {
+      const file = await convertURLToFile(
+        frontIDCardPreview,
+        "frontIdcard.jpg"
+      );
+      formData.append("frontIDCard", file);
+    } else {
+      formData.append("frontIDCard", frontIDCard);
+    }
+
+    if (backIDCardPreview && typeof backIDCardPreview === "string") {
+      const file = await convertURLToFile(backIDCardPreview, "backIdcard.jpg");
+      formData.append("backIDCard", file);
+    } else {
+      formData.append("backIDCard", backIDCard);
+    }
+
+    if (bankAccountQRPreview && typeof bankAccountQRPreview === "string") {
+      const file = await convertURLToFile(
+        bankAccountQRPreview,
+        "bankAccountQR.jpg"
+      );
+      formData.append("bankAccountQR", file);
+    } else {
+      formData.append("bankAccountQR", bankAccountQR);
+    }
+
     formData.append("dateOfBirth", dateOfBirth.toISOString().split("T")[0]);
     formData.append("iDCardNumber", idCardNumber);
 
-    setIsLoading(true);
-
     try {
-      const result = await updateToSeller(accountID, formData);
-      console.log("API Response:", result.data);
+      setIsLoading(true);
+
+      await updateToSellerResubmit(accountID, formData);
       clear();
       Swal.fire({
         icon: "success",
         title: "Thành công!",
-        text: "Account Profile đã được thêm thành công.",
+        text: "Thông tin tài khoản đã được thêm thành công.",
       });
+      navigate(-1);
     } catch (error) {
-      if (error.response && error.response.data) {
-        Swal.fire({
-          icon: "error",
-          title: "Lỗi!",
-          text: "Bạn đã gửi hồ sơ rồi, vui lòng chờ duyệt",
-        });
-        setIsLoading(false);
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Lỗi khi gửi hồ sơ.",
-          text: "Đã xảy ra sự cố khi gửi hồ sơ.",
-        });
-        setIsLoading(false);
-      }
+      console.error(error);
+      setIsLoading(false);
+      Swal.fire({
+        icon: "error",
+        title: "Lỗi khi gửi hồ sơ.",
+        text: "Đã xảy ra sự cố khi gửi hồ sơ.",
+      });
     }
   };
-
   const clear = () => {
     setPortrait(null);
     setPortraitPreview(null);
@@ -151,11 +189,10 @@ const UpdateToSeller = () => {
       setErrors((prevErrors) => ({ ...prevErrors, [e.target.name]: "" }));
     }
   };
-
   const handlefrontIDCardFileChange = (e) => {
     const file = e.target.files[0];
 
-    // Xóa thông báo lỗi nếu có tệp hợp lệ
+    // Xóa lỗi nều người dùng chọn một bức ảnh valid
     if (file) {
       setErrors((prevErrors) => ({ ...prevErrors, frontIDCard: "" }));
     }
@@ -169,13 +206,9 @@ const UpdateToSeller = () => {
     }
 
     setFrontIDCard(file);
-
-    // Tạo URL cho ảnh vừa chọn để hiển thị trước (preview)
     setFrontIDCardPreview(URL.createObjectURL(file));
 
-    // Sử dụng thư viện Tesseract.js để nhận diện văn bản từ ảnh
     Tesseract.recognize(file, "vie", {
-      // In ra thông tin tiến trình nhận diện văn bản
       logger: (m) => console.log(m),
     })
       .then(({ data: { text } }) => {
@@ -194,7 +227,6 @@ const UpdateToSeller = () => {
         // Kiểm tra ngày sinh (DD/MM/YYYY)
         const dateMatch = text.match(/\b(\d{2})\/(\d{2})\/(\d{4})\b/);
         if (dateMatch) {
-          // Nếu có, lưu ngày sinh vào state dưới dạng đối tượng Date
           const [_, day, month, year] = dateMatch;
           const date = new Date(`${year}-${month}-${day}`);
           setDateOfBirth(date);
@@ -218,7 +250,6 @@ const UpdateToSeller = () => {
         }
       })
       .catch((err) => {
-        // Xử lý lỗi nếu Tesseract nhận diện văn bản thất bại
         console.error("OCR Error: ", err);
         setErrors((prevErrors) => ({
           ...prevErrors,
@@ -238,30 +269,8 @@ const UpdateToSeller = () => {
     }
   };
 
-  const handleNotification = (text) => {
-    for (let i = 0; i < listModer.length; i++) {
-      // Gửi thông báo qua socket
-      socket.emit("sendNotification", {
-        senderName: accountOnline,
-        receiverName: listModer[i].userName,
-        content: text,
-      });
-
-      // Tạo thông báo mới
-      const newNotificationData = {
-        accountId: listModer[i].Id,
-        content: text,
-        date: new Date().toISOString(),
-        status: 1,
-      };
-
-      // Gọi hàm tạo thông báo (không cần await nếu bạn không cần phải chờ)
-      createNotification(newNotificationData);
-    }
-  };
-
   return (
-    <Container className="my-5 bg-white p-6 rounded-lg shadow-md ">
+    <Container className="my-5 bg-white p-6 rounded-lg shadow-md">
       <h1 className="text-4xl font-bold mb-6 flex items-center">
         <span className="text-orange-500 mr-2 text-5xl">+</span> Trở thành người
         bán hàng
@@ -272,7 +281,7 @@ const UpdateToSeller = () => {
       </p>
       <Form>
         <Row className="mb-6">
-          {/* Ảnh mặt trước */}
+          {/* Ảnh căn cước mặt trước */}
           <Col md={6}>
             <Form.Group controlId="frontIDCard">
               <Form.Label className="text-lg">
@@ -285,10 +294,8 @@ const UpdateToSeller = () => {
                 <>
                   <input
                     type="file"
-                    name="frontIDCard"
                     id="frontIDCard"
                     onChange={handlefrontIDCardFileChange}
-                    disabled={isLoading}
                     className="hidden"
                     accept="image/*"
                   />
@@ -319,8 +326,8 @@ const UpdateToSeller = () => {
                         setFrontIDCardPreview
                       )
                     }
-                    disabled={isLoading}
-                    className="mt-2 inline-flex items-center bg-red-500 text-white hover:bg-red-600 py-2 px-4 rounded-md"
+                    disabled={true}
+                    className="mt-2 inline-flex items-center bg-red-500 text-white py-2 px-4 rounded-md"
                   >
                     <FaTrashAlt className="mr-2" /> Xóa ảnh
                   </Button>
@@ -329,7 +336,7 @@ const UpdateToSeller = () => {
             </Form.Group>
           </Col>
 
-          {/* Ảnh mặt sau */}
+          {/* Ảnh căn cước mặt sau */}
           <Col md={6}>
             <Form.Group controlId="backIDCard">
               <Form.Label className="text-lg">Ảnh căn cước mặt sau</Form.Label>
@@ -340,12 +347,11 @@ const UpdateToSeller = () => {
                 <>
                   <input
                     type="file"
-                    name="backIDCard"
                     id="backIDCard"
                     onChange={(e) =>
                       handleFileChange(e, setBackIDCard, setBackIDCardPreview)
                     }
-                    disabled={isLoading}
+                    disabled={true}
                     className="hidden"
                     accept="image/*"
                   />
@@ -376,8 +382,8 @@ const UpdateToSeller = () => {
                         setBackIDCardPreview
                       )
                     }
-                    disabled={isLoading}
-                    className="mt-2 inline-flex items-center bg-red-500 text-white hover:bg-red-600 py-2 px-4 rounded-md"
+                    disabled={true}
+                    className="mt-2 inline-flex items-center bg-red-500 text-white py-2 px-4 rounded-md"
                   >
                     <FaTrashAlt className="mr-2" /> Xóa ảnh
                   </Button>
@@ -386,24 +392,23 @@ const UpdateToSeller = () => {
             </Form.Group>
           </Col>
         </Row>
+
         <Row className="mb-4">
           {/* Số căn cước công dân */}
           <Col md={6}>
-            <Form.Group>
-              <Form.Label>Số căn cước công dân</Form.Label>
-              <Form.Control
-                type="text"
-                value={idCardNumber}
-                onChange={(e) => setIdCardNumber(e.target.value)}
-                disabled={true}
-                isInvalid={!!errors.idCardNumber}
-              />
-              {errors.idCardNumber && (
-                <Form.Text className="text-danger">
-                  {errors.idCardNumber}
-                </Form.Text>
-              )}
-            </Form.Group>
+            <Form.Label>Số căn cước công dân</Form.Label>
+            <Form.Control
+              type="text"
+              value={idCardNumber}
+              onChange={(e) => setIdCardNumber(e.target.value)}
+              disabled={true}
+              isInvalid={!!errors.idCardNumber}
+            />
+            {errors.idCardNumber && (
+              <Form.Text className="text-danger">
+                {errors.idCardNumber}
+              </Form.Text>
+            )}
           </Col>
 
           {/* Ngày sinh */}
@@ -418,6 +423,7 @@ const UpdateToSeller = () => {
               }
               onChange={(e) => setDateOfBirth(e.target.value)}
               disabled={true}
+              placeholder="dd/MM/yyyy"
               isInvalid={!!errors.dateOfBirth}
             />
             {errors.dateOfBirth && (
@@ -429,6 +435,7 @@ const UpdateToSeller = () => {
         </Row>
 
         <Row className="mb-6">
+          {/* Ảnh chân dung */}
           <Col md={6}>
             <Form.Group controlId="portrait">
               <Form.Label className="text-lg">Ảnh chân dung</Form.Label>
@@ -444,7 +451,7 @@ const UpdateToSeller = () => {
                     onChange={(e) =>
                       handleFileChange(e, setPortrait, setPortraitPreview)
                     }
-                    disabled={isLoading}
+                    disabled={true}
                     className="hidden"
                     accept="image/*"
                   />
@@ -473,7 +480,7 @@ const UpdateToSeller = () => {
                         setPortraitPreview
                       )
                     }
-                    disabled={isLoading}
+                    disabled={true}
                     className="mt-2 inline-flex items-center bg-red-500 text-white hover:bg-red-600 py-2 px-4 rounded-md"
                   >
                     <FaTrashAlt className="mr-2" /> Xóa ảnh
@@ -483,6 +490,7 @@ const UpdateToSeller = () => {
             </Form.Group>
           </Col>
 
+          {/* Ảnh mã QR ngân hàng */}
           <Col md={6}>
             <Form.Group controlId="bankAccountQR">
               <Form.Label className="text-lg">
@@ -546,16 +554,11 @@ const UpdateToSeller = () => {
           </Col>
         </Row>
 
-        {/* Lưu ảnh */}
+        {/* Save Button */}
         <div className="d-flex justify-content-center mt-4">
           <Button
             variant="primary"
-            onClick={() => {
-              handleNotification(
-                `${accountOnline} đã gửi thông tin đăng kí bán hàng về hệ thống`
-              );
-              handleSaveAccountProfile();
-            }}
+            onClick={handleSaveAccountProfile}
             disabled={isLoading}
             className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-300 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 disabled:opacity-50"
           >
@@ -575,4 +578,4 @@ const UpdateToSeller = () => {
   );
 };
 
-export default UpdateToSeller;
+export default UpdateRoleUpdated;

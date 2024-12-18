@@ -16,22 +16,31 @@ export const getBookRates = async () => {
         throw error;
     }
 };
-export const saveBookRate = async (ratepoint, accountId,bookId) => {
+export const saveBookRate = async (ratepoint, customerId, bookId) => {
     const urlBookRate = "https://rmrbdapi.somee.com/odata/BookRate";
+    let dulieu=null;
+    // Validate input data
+    if (!ratepoint || !customerId || !bookId) {
+        throw new Error("Invalid input: ratepoint, customerId, and bookId are required.");
+    }
+
     const BookRateData = {
-        ratepoint, accountId,bookId
+        ratepoint, 
+        customerId,
+        bookId,
     };
 
     try {
         const response = await axios.post(urlBookRate, BookRateData, {
             headers: {
-                Token: "123-abc"
+                Token: "123-abc", // Use environment variable or default
             },
         });
+        dulieu =response.data;
         return response.data;
     } catch (error) {
-        console.error("Error saving Book Rate:", error);
-        throw new Error("Failed to save Book Rate.");
+        console.error("Error saving Book Rate:", dulieu);
+        throw new Error("Failed to save Book Rate. Please try again later.");
     }
 };
 
@@ -83,10 +92,10 @@ export const getCountBookRateBybookId = async (bookId) => {
 };
 
 // API cập nhật công thưc dựa theo bookId và AccountId
-export const updateBookRate = async (ratepoint, accountId,bookId) => {
-    const urlBookRate = `https://rmrbdapi.somee.com/odata/BookRate/${accountId}/${bookId}`;
+export const updateBookRate = async (ratepoint, customerId,bookId) => {
+    const urlBookRate = `https://rmrbdapi.somee.com/odata/BookRate/${customerId}/${bookId}`;
     const BookRateData = {
-        ratepoint, accountId,bookId
+        ratepoint, customerId,bookId
     };
     try {
         const response = await axios.put(urlBookRate,BookRateData,{
@@ -96,19 +105,19 @@ export const updateBookRate = async (ratepoint, accountId,bookId) => {
         });
         return response.data;
     } catch (error) {
-        console.error(`Error updating ratepoint with bookId ${bookId} and AccountId ${accountId}:`, error);
+        console.error(`Error updating ratepoint with bookId ${bookId} and AccountId ${customerId}:`, error);
         throw error;
     }
 };
 // API kiểm tra đã rate hay chưa
-export const checkRated = async (accountId,bookId ) => {
-    if (!accountId) {
-        console.error('Invalid accountId:', accountId);
+export const checkRated = async (customerId,bookId ) => {
+    if (!customerId) {
+        console.error('Invalid customerId:', customerId);
         return false;
     }
     try {
-        // Gọi API với URL mới `/BookRate/{bookId}/{accountId}`
-        const response = await axios.get(`https://rmrbdapi.somee.com/odata/BookRate/${accountId}/${bookId}`, {
+        // Gọi API với URL mới `/BookRate/{bookId}/{customerId}`
+        const response = await axios.get(`https://rmrbdapi.somee.com/odata/BookRate/${customerId}/${bookId}`, {
             headers: {
                 token: '123-abc'
             }
@@ -122,10 +131,10 @@ export const checkRated = async (accountId,bookId ) => {
         // return ratepoint !== null ? ratepoint : 0;
     } catch (error) {
         if (error.response && error.response.status === 404) {
-            console.warn(`Data not found for bookId ${bookId} and AccountId ${accountId}. Returning 0.`);
+            console.warn(`Data not found for bookId ${bookId} and AccountId ${customerId}. Returning 0.`);
             return 0;
         } else {
-            console.error(`Error fetching data with bookId ${bookId} and AccountId ${accountId}:`, error);
+            console.error(`Error fetching data with bookId ${bookId} and AccountId ${customerId}:`, error);
             throw error;
         }
     }

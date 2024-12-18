@@ -37,7 +37,7 @@ import EditRoleUpdated from "../Customer/EditRoleUpdated";
 import UpdateToSeller from "../Customer/UpdateToSeller";
 import UpdateAccount from "../Customer/UpdateInformation";
 import UpdateToSellerInfo from "../Customer/UpdateToSellerInfo";
-
+import UpdateRoleUpdated from "../Customer/UpdateRoleUpdated";
 //import Addbook from '../Pages/Add Items/AddBook';
 import Recipe from "../Pages/Recipe/Recipe";
 import RecipeDetail from "../Pages/Recipe/RecipeDetail";
@@ -71,6 +71,7 @@ import UpdateInformation from "../Moderator/UpdateInformation";
 import UpdateBookDetails from "../Moderator/Details/UpdateBookDetails";
 import UpdateAccountDetails from "../Moderator/Details/UpdateAccountDetails";
 import UpdateAccountMod from "../Moderator/UpdateAccount";
+import UpdateEbookDetails from "../Moderator/Details/UpdateEbookDetails";
 //Admin
 // import RecipeDetails from "../Admin/Recipemanagement/RecipeDetail";
 import AdminDashboard from "../Admin/Dashboard/index";
@@ -192,6 +193,10 @@ export default function RouterPage() {
               path="/reportresponse/:reportId"
               element={<ReportResponse />}
             />
+            <Route
+              path="/update-profile/:accountID"
+              element={<UpdateRoleUpdated />}
+            />
             <Route path="/report" element={<Report />} />
             <Route path="/withdrawrequest" element={<WithDrawRequest />} />
             <Route path="/withdrawlist" element={<WithdrawList />} />
@@ -301,6 +306,10 @@ export default function RouterPage() {
               { path: "/update-role", component: <UpdateRole /> },
               { path: "/update-recipe", component: <UpdateRecipe /> },
               { path: "/update-account-mod", component: <UpdateAccountMod /> },
+              {
+                path: "/update-ebook-details/:ebookId",
+                component: <UpdateEbookDetails />,
+              },
               {
                 path: "/update-moderator-information",
                 component: <UpdateInformation />,

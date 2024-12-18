@@ -25,7 +25,6 @@ import HandleBuy from "./HandleBuy";
 import "../../../assets/styles/Components/blurred.css";
 import { useNavigate } from "react-router-dom";
 import CheckMarkIcon from "/images/icon/iconscheckmark24.png";
-import Swal from "sweetalert2";
 import { decryptData } from "../../Encrypt/encryptionUtils";
 
 const RecipeDetail = () => {
@@ -102,7 +101,7 @@ const RecipeDetail = () => {
   const handleUpdateRecipeRate = async () => {
     try {
       await updateRecipeRate(recipeId, accountId, ratepoint);
-      setShowModal(false); // Đóng modal khi lưu thành công
+      setShowModal(false);
       window.location.reload();
     } catch (error) {
       console.error("Failed to save recipe rate:", error);
@@ -272,15 +271,13 @@ const RecipeDetail = () => {
                             <strong>Bước {index}</strong>
                           </div>
                           <div className="ml-7">
-                            <span
-                              className={
-                                purchasedRecipes.has(recipe.recipeId)
-                                  ? ""
-                                  : "blurred"
-                              }
-                            >
-                              {step.trim()}
-                            </span>
+                            {purchasedRecipes.has(recipe.recipeId) ? (
+                              // Hiển thị nội dung nếu đã mua
+                              <span>{step.trim()}</span>
+                            ) : (
+                              // Hiển thị "Nội dung bị ẩn" nếu chưa mua
+                              <span className="blurred">Nội dung bị ẩn</span>
+                            )}
                           </div>
                         </div>
                       )
@@ -292,12 +289,24 @@ const RecipeDetail = () => {
             </p>
             <li>
               <span className="font-semibold">Video:</span>{" "}
-              <span
-                className={
-                  purchasedRecipes.has(recipe.recipeId) ? "" : "blurred"
-                }
-              >
-                {recipe.Video || "Nội dung bị ẩn"}
+              <span>
+                {purchasedRecipes.has(recipe.recipeId) ? (
+                  // Hiển thị đường dẫn video nếu đã mua
+                  recipe.video ? (
+                    <a
+                      href={recipe.video}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Xem Video
+                    </a>
+                  ) : (
+                    "Video không có sẵn"
+                  )
+                ) : (
+                  // Hiển thị "Video bị ẩn" nếu chưa mua
+                  <span className="blurred">Video bị ẩn</span>
+                )}
               </span>
             </li>
             {!purchasedRecipes.has(recipe.recipeId) && (
@@ -307,23 +316,18 @@ const RecipeDetail = () => {
             )}
             <li>
               <span className="font-semibold">Giá:</span>{" "}
-              {recipe.price === 0 ? (
-                <span className="text-green-600">Miễn Phí</span>
-              ) : (
-                <>
-                  {recipe.price.toLocaleString()}
-                  <img src="/images/icon/dollar.png" alt="coins" className="h-5 w-5 mb-1 ml-1 inline-block" />
-                </>
-              )}
+              {recipe.price ? recipe.price + " đ" : "Miễn phí"}
             </li>
             <li>
               <span className="font-semibold">Thành phần:</span>{" "}
-              <span
-                className={
-                  purchasedRecipes.has(recipe.recipeId) ? "" : "blurred"
-                }
-              >
-                {recipe.ingredient || "Nội dung bị ẩn"}
+              <span>
+                {purchasedRecipes.has(recipe.recipeId) ? (
+                  // Hiển thị nội dung nếu đã mua
+                  <span>{recipe.ingredient || "Nội dung không có sẵn"}</span>
+                ) : (
+                  // Hiển thị "Nội dung bị ẩn" nếu chưa mua
+                  <span className="blurred">Nội dung bị ẩn</span>
+                )}
               </span>
             </li>
             <li>

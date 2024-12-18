@@ -27,11 +27,13 @@ const EbookCard = ({ ebook }) => {
         <div className="relative aspect-[3/4] overflow-hidden rounded-lg border border-gray-200 
           shadow-[0_4px_20px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.25)] 
           transition-shadow duration-300 bg-white">
+            <div className="absolute top-0 left-0 right-0 bottom-0 book-border z-20"></div>
           {/* Book Cover */}
           <img
             src={ebook.imageUrl}
             alt={ebook.ebookName}
-            className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-110"
+            className="w-full h-full object-cover rounded-lg"
+            // className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-110"
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = 'https://via.placeholder.com/300x400?text=No+Image';

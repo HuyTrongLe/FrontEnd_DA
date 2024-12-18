@@ -231,10 +231,6 @@ function BookCard({ book }) {
     }
   };
 
-  const handleRemoveFromCart = () => {
-    setIsAddedToCart(false);
-  };
-
   const handleCardClick = () => {
     navigate(`/book-detail/${book.bookId}`);
   };
@@ -340,7 +336,7 @@ function BookCard({ book }) {
     <div className="book">
       <div className="book-container">
         <div
-          className="top"
+          className="top relative"
           style={{
             backgroundImage: `url(${book.images && book.images.length > 0
                 ? book.images[0].imageUrl
@@ -348,7 +344,9 @@ function BookCard({ book }) {
               })`,
           }}
           onClick={handleCardClick}
-        ></div>
+        >
+          <div className="absolute top-0 left-0 right-0 bottom-0 book-border z-20 rounded-none"></div>
+        </div>
 
         {/* Book Info */}
         <div className={`bottom ${isAddedToCart ? "clicked" : ""}`}>

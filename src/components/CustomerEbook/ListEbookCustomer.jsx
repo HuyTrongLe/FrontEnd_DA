@@ -21,7 +21,8 @@ const EditEbookCustomer = () => {
     categoryId: '',
     createById: '',
     censorId: '',
-    pdfurl: ''
+    pdfurl: '',
+    author: ''
   });
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -97,6 +98,7 @@ const EditEbookCustomer = () => {
       ebookData.append('categoryId', parseInt(newEbook.categoryId, 10));
       ebookData.append('CreateById', currentUserId);
       ebookData.append('CensorId', newEbook.censorId);
+      ebookData.append('Author', newEbook.author);
 
       if (newEbook.image[0]) {
         ebookData.append('image', newEbook.image[0]);
@@ -170,7 +172,8 @@ const EditEbookCustomer = () => {
         createById: newEbook.createById,
         status: newEbook.status,
         imageUrl: updatedImageUrl,
-        pdfUrl: updatedPdfUrl
+        pdfUrl: updatedPdfUrl,
+        author: newEbook.author
       };
 
       console.log('Sending update data:', ebookData);
@@ -198,7 +201,8 @@ const EditEbookCustomer = () => {
               categoryId: parseInt(newEbook.categoryId, 10),
               status: newEbook.status,
               imageUrl: updatedImageUrl,
-              pdfUrl: updatedPdfUrl
+              pdfUrl: updatedPdfUrl,
+              author: newEbook.author
             }
             : ebook
         )
@@ -236,7 +240,8 @@ const EditEbookCustomer = () => {
       categoryId: ebook.categoryId,
       createById: ebook.createById,
       censorId: ebook.censorId,
-      pdfurl: ebook.pdfurl || ebook.pdfUrl
+      pdfurl: ebook.pdfurl || ebook.pdfUrl,
+      author: ebook.author || ''
     });
     setModalOpen(true);
   };
@@ -251,7 +256,8 @@ const EditEbookCustomer = () => {
       categoryId: '',
       createById: currentUserId,
       censorId: '',
-      pdfurl: ''
+      pdfurl: '',
+      author: ''
     });
     setModalOpen(false);
     setEditMode(false);
@@ -322,6 +328,7 @@ const EditEbookCustomer = () => {
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">Thể Loại</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PDF</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tác giả</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao Tác</th>
                   </tr>
                 </thead>
@@ -398,6 +405,11 @@ const EditEbookCustomer = () => {
                             )}
                           </td>
                           <td className="px-6 py-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {ebook.author || 'Unknown'}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
                             <button
                               onClick={() => handleEditButtonClick(ebook)}
                               className="inline-flex items-center px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 transition-colors duration-200"
@@ -405,7 +417,7 @@ const EditEbookCustomer = () => {
                               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
-                              Edit
+                              Chỉnh sửa
                             </button>
                           </td>
                         </tr>
@@ -448,7 +460,7 @@ const EditEbookCustomer = () => {
                   <div className="grid grid-cols-1 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Ebook Name
+                        Tên Sách Điện Tử
                       </label>
                       <input
                         type="text"
@@ -461,7 +473,7 @@ const EditEbookCustomer = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Description
+                        Mô tả
                       </label>
                       <textarea
                         value={newEbook.description}
@@ -475,7 +487,7 @@ const EditEbookCustomer = () => {
                     <div className="grid grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Price
+                          Giá
                         </label>
                         <input
                           type="text"
@@ -488,7 +500,7 @@ const EditEbookCustomer = () => {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Category
+                          Thể loại
                         </label>
                         <select
                           value={newEbook.categoryId}
@@ -506,19 +518,32 @@ const EditEbookCustomer = () => {
                       </div>
                     </div>
 
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Tác giả
+                      </label>
+                      <input
+                        type="text"
+                        value={newEbook.author}
+                        onChange={(e) => setNewEbook({ ...newEbook, author: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+
                     <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
                       <button
                         type="button"
                         onClick={resetForm}
                         className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200"
                       >
-                        Cancel
+                        Hủy
                       </button>
                       <button
                         type="submit"
                         className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
                       >
-                        {editMode ? 'Update Ebook' : 'Add Ebook'}
+                        {editMode ? 'Cập Nhật Sách' : 'Add Ebook'}
                       </button>
                     </div>
                   </div>

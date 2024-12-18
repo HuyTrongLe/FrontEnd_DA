@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import Cookies from "js-cookie";
-import { FaCheckCircle, FaTimesCircle, FaClock, FaBan } from "react-icons/fa";
+import { FaCheckCircle, FaTimesCircle, FaClock, FaBan,FaSyncAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Swal from "sweetalert2";
@@ -86,7 +86,9 @@ const UpdateToSellerInfo = () => {
   const handleEdit = () => {
     navigate(`/edit-profile/${accountID}`);
   };
-
+  const handleUpdate = () => {
+    navigate(`/update-profile/${accountID}`);
+  };
   const handleBackButton = () => {
     Swal.fire({
       title: "Quay lại trang chủ?",
@@ -169,7 +171,21 @@ const UpdateToSellerInfo = () => {
                       Chỉnh sửa
                     </button>
                   </>
-                ) : (
+                ) : 
+                accountProfile.status === 2 ? (
+                  <>
+                    <span className="text-red-500 flex items-center space-x-2">
+                      <FaSyncAlt size={20} />
+                      <span>Cập nhật thông tin</span>
+                    </span>
+                    <button
+                      onClick={handleUpdate}
+                      className="ml-4 px-4 py-2 bg-indigo-500 text-white text-sm rounded-md hover:bg-indigo-600 transition"
+                    >
+                      Chỉnh sửa
+                    </button>
+                  </>
+                ) :(
                   <span className="text-orange-500 flex items-center space-x-2">
                     <FaTimesCircle size={20} />
                     <span>Bạn chưa gửi thông tin nào</span>
@@ -181,7 +197,7 @@ const UpdateToSellerInfo = () => {
               <label className="block text-base font-medium text-gray-700 mb-1 mr-8">
                 Lưu ý
               </label>
-              <div className="px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 text-gray-700 w-1/6">
+              <div className="flex items-center py-2 rounded-lg bg-gray-100 border border-gray-300 text-gray-700">
                 {accountProfile.censorNote}
               </div>
             </div>

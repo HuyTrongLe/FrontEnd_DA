@@ -151,6 +151,7 @@ function EbookDetail() {
             {/* Left Column - Book Cover with sticky effect */}
             <div className="md:w-1/3">
               <div className="sticky top-8">
+              <div className="absolute top-0 left-0 right-0 bottom-0 book-border z-20"></div>
                 <img
                   src={ebook.imageUrl}
                   alt={ebook.ebookName}
@@ -184,7 +185,7 @@ function EbookDetail() {
                   <p className="font-medium">{getCategoryName()}</p>
                 </div>
                 <div>
-                  <h3 className="text-gray-500 mb-1">Nhà xuất bản</h3>
+                  <h3 className="text-gray-500 mb-1">Người đăng:</h3>
                   <p className="font-medium">{ebook.createBy?.userName || "Đang cập nhật"}</p>
                 </div>
               </div>
