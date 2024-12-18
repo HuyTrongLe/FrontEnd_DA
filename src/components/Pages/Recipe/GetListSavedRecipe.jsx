@@ -55,8 +55,8 @@ const GetListSaveRecipe = () => {
     <section className="flex flex-col md:flex-row justify-center items-start p-4 space-y-8 md:space-y-0 md:space-x-8">
       <Sidebar />
       <div className="flex flex-col">
-        <Container
-          className="section-center w-[1000px] bg-white p-4 rounded-lg shadow-md flex flex-col"
+        <div
+          className="section-center w-[1140px] bg-white p-4 rounded-lg shadow-md flex flex-col text-xl"
         >
           <h2 className="text-2xl font-bold text-gray-800 pb-10">
             Công thức nấu ăn đã lưu
@@ -69,7 +69,7 @@ const GetListSaveRecipe = () => {
                 justifyContent: "center",
                 alignItems: "center",
                 height: "50vh",
-                width: "100vh"
+                width: "120vh"
               }}
             >
               <CircularProgress />
@@ -217,7 +217,7 @@ const GetListSaveRecipe = () => {
               </Typography>
             </Box>
           )}
-        </Container>
+        </div>
       </div>
     </section>
   );

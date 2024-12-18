@@ -115,7 +115,7 @@ const RecipeDetail = () => {
       receiverName: accountName,
       content: text,
     });
-    if(accountId!==createById){
+    if (accountId !== createById) {
       const addNotification = () => {
         const newNotificationData = {
           accountId: createById,
@@ -520,11 +520,7 @@ const RecipeDetail = () => {
                 )}
               </span>
             </li>
-            {!purchasedRecipes.has(recipe.recipeId) && (
-              <p className="text-red-500">
-                Vui lòng mua công thức để xem nội dung chi tiết.
-              </p>
-            )}
+
             <li>
               <span className="font-semibold">Giá:</span>{" "}
               {recipe.price ? recipe.price + " đ" : "Miễn phí"}
@@ -547,7 +543,11 @@ const RecipeDetail = () => {
             </li>
           </ul>
         </div>
-
+        {!purchasedRecipes.has(recipe.recipeId) && (
+          <p className="text-red-500 font-bold text-xl mt-2">
+            Vui lòng mua công thức để xem nội dung chi tiết.
+          </p>
+        )}
         {/* Product Description with Show More/Less Toggle */}
         <div className="border-t border-gray-200 pt-6 mt-6">
           <h2 className="text-3xl font-semibold text-gray-800 mb-4">

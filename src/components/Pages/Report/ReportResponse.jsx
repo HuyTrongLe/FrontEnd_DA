@@ -133,8 +133,8 @@ const ReportResponse = () => {
                         })}</Typography>
                         <Typography><strong>Trạng thái:</strong> 
                             {(() => {
-                                if (report.status === 1) return <span style={{ color: 'green' }}>Đã sử lý</span>;
-                                else if (report.status === -1) return <span style={{ color: 'yellow' }}>Chưa sử lý</span>;
+                                if (report.status === 1) return <span style={{ color: 'green' }}>Đã xử lý</span>;
+                                else if (report.status === -1) return <span style={{ color: 'yellow' }}>Chưa xử lý</span>;
                                 else if (report.status === 0) return <span style={{ color: 'red' }}>Đã Hủy</span>;
                             })()}
                         </Typography>
