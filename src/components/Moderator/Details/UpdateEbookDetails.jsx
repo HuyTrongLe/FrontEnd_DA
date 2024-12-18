@@ -24,7 +24,7 @@ function EbookDetail() {
         setStatus(data.status);
         setCensorNote(data.censorNote || "");
         // Check if user owns the ebook
-        const customerId = decryptData(decryptData(Cookies.get("UserId")));
+        const customerId = decryptData(Cookies.get("UserId"));
         if (customerId) {
           const isOwned = await checkEbookOwnership(customerId, ebookId);
           console.log("Ownership check result:", isOwned); // Debug log

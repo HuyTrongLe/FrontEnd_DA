@@ -9,8 +9,8 @@ import {
 import Cookies from "js-cookie";
 import DataTable from "react-data-table-component";
 import { listEbook } from "../services/ModeratorService/Api";
-import { decryptData } from "../Encrypt/encryptionUtils";
 import { useNavigate } from "react-router-dom";
+import { decryptData } from "../Encrypt/encryptionUtils";
 
 const EbookList = () => {
   const [ebooks, setebooks] = useState([]);
@@ -35,10 +35,9 @@ const EbookList = () => {
     }
   };
 
-  const handleDetails = (ebookId) => {
+  const handleDetails = async (ebookId) => {
     navigate(`/update-ebook-details/${ebookId}`);
   };
-
   useEffect(() => {
     fetchebooks();
   }, []);
@@ -117,7 +116,7 @@ const EbookList = () => {
       selector: (row) => (
         <button
           className="btn btn-link"
-          onClick={() => handleDetails(row.accountId)}
+          onClick={() => handleDetails(row.ebookId)}
         >
           <FaInfoCircle
             style={{
