@@ -19,11 +19,12 @@ import Swal from 'sweetalert2';
 import { useCart } from '../../Cart/components/CartContext';
 import { decryptData } from "../../Encrypt/encryptionUtils";
 import { useNavigate } from "react-router-dom";
+import { set } from 'lodash';
 const BookDetail = () => {
     const { bookId } = useParams();
     const [book, setBook] = useState(null);
     const [imageUrl, setImageUrl] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showFullDescription, setShowFullDescription] = useState(false);
     const navigate = useNavigate();
@@ -85,7 +86,7 @@ const BookDetail = () => {
                 confirmButtonText: "OK"
             });
         }
-        
+
     };
 
     const handleUpdateRecipeRate = async () => {
@@ -119,6 +120,7 @@ const BookDetail = () => {
     };
 
     useEffect(() => {
+        setLoading(true);
         const fetchBookData = async () => {
             try {
                 const data = await getBookById(bookId);
@@ -288,7 +290,15 @@ const BookDetail = () => {
     const fullStars = Math.floor(roundedAverageRate);
     const halfStar = averageRate % 1 >= 0.5 ? 1 : 0;
 
-    if (loading) return <p>Đang tải dữ liệu...</p>;
+    if (loading) {
+        return (
+            <div className="d-flex justify-content-center">
+                <div className="spinner-border" role="status">
+                    <span className="sr-only">Loading...</span>
+                </div>
+            </div>
+        );
+    }
     if (error) return <p>{error}</p>;
     if (!book) return <p>Không tìm thấy thông tin sách.</p>;
 
@@ -491,17 +501,6 @@ const BookDetail = () => {
                             <div className="rating-count">({countRate} đánh giá)</div>
                         </div>
                     </div>
-                    <div className="rating-bars">
-                        {[5, 4, 3, 2, 1].map((star) => (
-                            <div key={star} className="rating-bar">
-                                <span>{star} sao</span>
-                                <div className="bar">
-                                    <div className="fill" style={{ width: "0%" }}></div>
-                                </div>
-                                <span>0%</span>
-                            </div>
-                        ))}
-                    </div>
                     {showModal && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                             <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
@@ -552,7 +551,7 @@ const BookDetail = () => {
                                         onClick={() => {
                                             if (accountId) {
                                                 handleNotification(`${accountOnline} đã đánh giá ${ratepoint} sao về sách ${book.bookName} của bạn`);
-                                                
+
                                             }
                                             checkRatedStatus ? handleUpdateRecipeRate() : handleSaveRecipeRate();
                                         }}

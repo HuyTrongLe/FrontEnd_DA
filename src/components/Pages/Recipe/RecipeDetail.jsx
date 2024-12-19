@@ -350,8 +350,8 @@ const RecipeDetail = () => {
                               );
                             }
                             checkRatedStatus
-                            ? handleUpdateRecipeRate()
-                            : handleSaveRecipeRate();
+                              ? handleUpdateRecipeRate()
+                              : handleSaveRecipeRate();
                           }}
                         >
                           {checkRatedStatus ? "Update Ratepoint" : "Save Ratepoint"}
@@ -366,31 +366,74 @@ const RecipeDetail = () => {
 
                 {/* Nút "Mua công thức này" chỉ hiển thị khi chưa mua */}
                 {!purchasedRecipes.has(recipe.recipeId) && (
-                  <button
-                    className="write-review-button"
-                    style={{ width: "45%", height: "70px" }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      HandleBuy(
-                        recipe,
-                        accountId,
-                        purchasedRecipes,
-                        getAccountInfo,
-                        getPurchasedRecipes,
-                        dataAccount,
-                        navigate
-                      );
-                    }}
-                  >
-                    <span role="img" aria-label="buy">
-                      🛒
-                    </span>{" "}
-                    Mua công thức này
-                  </button>
+                  recipe.price === 0 ? (
+                    <div style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      gap: "10px",
+                    }}>
+                      <button
+                        className="write-review-button"
+                        style={{ width: "45%", height: "70px" }}
+                        onClick={handleOpenModal}
+                      >
+                        <span role="img" aria-label="star">
+                          ✨
+                        </span>{" "}
+                        Đánh giá công thức
+                      </button>
+                      <button
+                        className="write-review-button"
+                        style={{ width: "45%", height: "70px" }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          HandleBuy(
+                            recipe,
+                            accountId,
+                            purchasedRecipes,
+                            getAccountInfo,
+                            getPurchasedRecipes,
+                            dataAccount,
+                            navigate
+                          );
+                        }}
+                      >
+                        <span role="img" aria-label="buy">
+                          🛒
+                        </span>{" "}
+
+                        <span>Lưu công thức</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      className="write-review-button"
+                      style={{ width: "45%", height: "70px" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        HandleBuy(
+                          recipe,
+                          accountId,
+                          purchasedRecipes,
+                          getAccountInfo,
+                          getPurchasedRecipes,
+                          dataAccount,
+                          navigate
+                        );
+                      }}
+                    >
+                      <span role="img" aria-label="buy">
+                        🛒
+                      </span>{" "}
+
+                      <span>Mua công thức ({recipe.price})</span>
+                    </button>
+                  )
                 )}
 
                 {/* Nút "Sửa đổi công thức" chỉ hiển thị khi đã mua */}
-                {purchasedRecipes.has(recipe.recipeId) && (
+                {(purchasedRecipes.has(recipe.recipeId) && (
                   <div
                     style={{
                       display: "flex",
@@ -424,7 +467,7 @@ const RecipeDetail = () => {
                       Sửa đổi công thức
                     </button>
                   </div>
-
+                )
                 )}
               </div>
             </div>
@@ -491,11 +534,9 @@ const RecipeDetail = () => {
                                 <strong>Bước {index}</strong>
                               </div>
                               <div className="ml-7">
-                                {purchasedRecipes.has(recipe.recipeId) ? (
-                                  // Hiển thị nội dung nếu đã mua
+                                {(purchasedRecipes.has(recipe.recipeId) || recipe.price === 0) ? (
                                   <span>{step.trim()}</span>
                                 ) : (
-                                  // Hiển thị "Nội dung bị ẩn" nếu chưa mua
                                   <span className="blurred">Nội dung bị ẩn</span>
                                 )}
                               </div>
@@ -510,7 +551,7 @@ const RecipeDetail = () => {
                 <li>
                   <span className="font-semibold">Video:</span>{" "}
                   <span>
-                    {purchasedRecipes.has(recipe.recipeId) ? (
+                    {(purchasedRecipes.has(recipe.recipeId) || recipe.price === 0) ? (
                       // Hiển thị đường dẫn video nếu đã mua
                       recipe.video ? (
                         <a
@@ -545,7 +586,7 @@ const RecipeDetail = () => {
                 <li>
                   <span className="font-semibold">Thành phần:</span>{" "}
                   <span>
-                    {purchasedRecipes.has(recipe.recipeId) ? (
+                    {(purchasedRecipes.has(recipe.recipeId) || recipe.price === 0) ? (
                       // Hiển thị nội dung nếu đã mua
                       <span>{recipe.ingredient || "Nội dung không có sẵn"}</span>
                     ) : (
@@ -560,7 +601,7 @@ const RecipeDetail = () => {
                 </li>
               </ul>
             </div>
-            {!purchasedRecipes.has(recipe.recipeId) && (
+            {!(purchasedRecipes.has(recipe.recipeId) || recipe.price === 0) && (
               <p className="text-red-500 font-bold text-xl mt-2">
                 Vui lòng mua công thức để xem nội dung chi tiết.
               </p>
