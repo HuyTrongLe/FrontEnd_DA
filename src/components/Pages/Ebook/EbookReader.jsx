@@ -95,7 +95,12 @@ const EbookReader = () => {
   };
 
   const changeScale = (delta) => {
-    setScale(prevScale => Math.min(Math.max(0.5, prevScale + delta), 2.0));
+    setScale(prevScale => {
+      const newScale = prevScale + delta;
+      console.log('New scale:', newScale);
+      // Limit scale between 0.5 (50%) and 2.0 (200%)
+      return Math.min(Math.max(0.5, newScale), 2.0);
+    });
   };
 
   const handleBackToDetail = async () => {
@@ -149,9 +154,9 @@ const EbookReader = () => {
       {/* Add margin-top to prevent content from being hidden under the header */}
       <div className="pt-16">
         {/* PDF Viewer with side navigation arrows */}
-        <div className="container mx-auto px-4 py-4 flex justify-center items-center relative">
+        <div className="relative flex justify-center items-center">
           {/* Left Arrow */}
-          <div className="absolute left-0 flex items-center h-full">
+          <div className="absolute left-4 flex items-center h-full z-10">
             <button 
               onClick={() => changePage(-1)} 
               disabled={pageNumber <= 1}
@@ -169,7 +174,7 @@ const EbookReader = () => {
           </div>
 
           {/* PDF Content */}
-          <div className="w-full max-w-5xl">
+          <div className="w-full flex justify-center relative z-0">
             {pdfBlob ? (
               <Document
                 file={pdfBlob}
@@ -192,6 +197,7 @@ const EbookReader = () => {
                         renderTextLayer={true}
                         renderAnnotationLayer={true}
                         className="shadow-lg"
+                        width={Math.min(window.innerWidth * 0.28, 800)}
                       />
                     </div>
                   </CSSTransition>
@@ -205,7 +211,7 @@ const EbookReader = () => {
           </div>
 
           {/* Right Arrow */}
-          <div className="absolute right-0 flex items-center h-full">
+          <div className="absolute right-4 flex items-center h-full z-10">
             <button 
               onClick={() => changePage(1)}
               disabled={!numPages || pageNumber >= numPages}
@@ -225,7 +231,7 @@ const EbookReader = () => {
       </div>
 
       {/* Bottom toolbar */}
-      <div className={`fixed bottom-0 left-0 right-0 transition-colors duration-300 ease-in-out ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-600'} border-t border-gray-200`}>
+      <div className={`fixed bottom-0 left-0 right-0 transition-colors duration-300 ease-in-out ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-600'} border-t border-gray-200 z-50`}>
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
             <span className="text-sm transition-colors duration-300 ease-in-out">
@@ -240,6 +246,41 @@ const EbookReader = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              {/* Zoom controls */}
+              <div className="flex items-center space-x-2 relative z-50">
+                <button
+                  onClick={() => {
+                    console.log('Zoom out clicked');
+                    changeScale(-0.1);
+                  }}
+                  className={`p-2 rounded-full w-10 h-10 flex items-center justify-center transition-all duration-300 ease-in-out 
+                    ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'}
+                    ${scale <= 0.5 ? 'opacity-50 cursor-not-allowed' : ''}
+                    relative z-50`}
+                  title="Zoom Out"
+                  disabled={scale <= 0.5}
+                >
+                  <span className="material-icons text-xl">zoom_out</span>
+                </button>
+                
+                <span className="text-sm min-w-[60px] text-center">
+                  {Math.round(scale * 100)}%
+                </span>
+                
+                <button
+                  onClick={() => changeScale(0.1)}
+                  className={`p-2 rounded-full w-10 h-10 flex items-center justify-center transition-all duration-300 ease-in-out ${
+                    isDarkMode 
+                      ? 'bg-gray-700 hover:bg-gray-600' 
+                      : 'bg-gray-200 hover:bg-gray-300'
+                  }`}
+                  title="Zoom In"
+                  disabled={scale >= 2.0}
+                >
+                  <span className="material-icons text-xl">zoom_in</span>
+                </button>
+              </div>
+
               {/* Dark mode toggle button */}
               <button
                 onClick={() => setIsDarkMode(!isDarkMode)}

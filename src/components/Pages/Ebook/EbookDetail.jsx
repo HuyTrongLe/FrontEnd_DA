@@ -24,12 +24,11 @@ function EbookDetail() {
         const data = await getEbookById(ebookId);
         setEbook(data);
         
-        // Check if user owns the ebook
+        // Check ownership immediately when loading ebook details
         const customerId = decryptData(Cookies.get('UserId'));
         if (customerId) {
           const isOwned = await checkEbookOwnership(customerId, ebookId);
-          console.log('Ownership check result:', isOwned); // Debug log
-          setIsPurchased(isOwned);
+          setIsPurchased(isOwned || data.createById === customerId);
         }
         
         setLoading(false);
@@ -93,6 +92,8 @@ function EbookDetail() {
             icon: 'success',
             confirmButtonText: 'OK'
           });
+          
+          window.location.reload();
           
         } catch (error) {
           console.error('Transaction error:', error);

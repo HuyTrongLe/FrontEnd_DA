@@ -29,6 +29,49 @@ const getAccountById = async (accountId) => {
   }
 };
 
+const formatDeliveryDate = (timestamp) => {
+  if (!timestamp) return '';
+  const date = new Date(timestamp * 1000); // Convert Unix timestamp to JS Date
+  return new Intl.DateTimeFormat('vi-VN', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
+};
+
+const deleteOrderDetail = async (orderDetailId) => {
+  try {
+    await axios.delete(`https://rmrbdapi.somee.com/odata/BookOrderDetail/${orderDetailId}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Token': '123-abc'
+      }
+    });
+  } catch (error) {
+    console.error(`Error deleting order detail ${orderDetailId}:`, error);
+    throw error;
+  }
+};
+
+// Add this helper function to delete parent order
+const deleteParentOrder = async (orderId) => {
+  try {
+    await axios.delete(`https://rmrbdapi.somee.com/odata/BookOrder/${orderId}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Token': '123-abc'
+      }
+    });
+    console.log(`Order ${orderId} deleted successfully.`);
+  } catch (error) {
+    // Just log the error since the order might have been already deleted
+    console.log(`Parent order ${orderId} might have been already deleted:`, error);
+  }
+};
+
 const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -63,31 +106,6 @@ const Checkout = () => {
   const [isAddressLoading, setIsAddressLoading] = useState(false);
   const [isRecipientLoading, setIsRecipientLoading] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
-  const [newAddress, setNewAddress] = useState({
-    AddressID: '',
-    AccountID: userId,
-    AddressStatus: 1,
-    wardCode: '',
-    districtCode: '',
-    provinceCode: '',
-    AddressDetail: '',
-    phoneNumber: '',
-  });
-  const [provinces, setProvinces] = useState([]);
-  const [districts, setDistricts] = useState([]);
-  const [wards, setWards] = useState([]);
-  const [addressMode, setAddressMode] = useState('select'); // 'select' or 'new'
-  const [newShippingAddress, setNewShippingAddress] = useState({
-    AddressID: '',
-    AccountID: userId,
-    AddressStatus: 1,
-    wardCode: '',
-    districtCode: '',
-    provinceCode: '',
-    AddressDetail: '',
-    phoneNumber: '',
-    recipientName: '', // Add recipient name field
-  });
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Add new state for grouped orders
@@ -297,6 +315,8 @@ const Checkout = () => {
     fetchRecipientDetails();
   }, [selectedAddress?.accountId]); // Only run when selected address changes
 
+  const [expectedDeliveryTime, setExpectedDeliveryTime] = useState(null);
+
   const calculateShippingFeeForAddress = async (address) => {
     try {
       const senderAddressId = selectedOrders[0]?.bookDetails?.senderAddressId;
@@ -355,6 +375,7 @@ const Checkout = () => {
         const response = await calculateShippingFee(firstFeeData);
         if (response.data?.total) {
           setShippingFee(response.data.total);
+          setExpectedDeliveryTime(response.expected_delivery_time);
           return;
         }
       } catch (error) {
@@ -369,6 +390,7 @@ const Checkout = () => {
         const response = await calculateShippingFee(secondFeeData);
         if (response.data?.total) {
           setShippingFee(response.data.total);
+          setExpectedDeliveryTime(response.expected_delivery_time);
           return;
         }
       } catch (error) {
@@ -378,6 +400,7 @@ const Checkout = () => {
 
       // If we get here, neither service ID worked
       setShippingFee(0);
+      setExpectedDeliveryTime(null);
       setSelectedAddress(null); // Reset selected address
       toast.error('Khu vực không hỗ trợ giao hàng');
 
@@ -385,544 +408,18 @@ const Checkout = () => {
       console.error('Error calculating shipping fee:', error);
       console.error('Error response:', error.response?.data);
       setShippingFee(0);
+      setExpectedDeliveryTime(null);
       setSelectedAddress(null); // Reset selected address
       toast.error('Khu vực không hỗ trợ giao hàng');
     }
   };
 
-  // Load provinces when switching to new address mode
-  useEffect(() => {
-    if (addressMode === 'new') {
-      fetchProvinces();
-    }
-  }, [addressMode]);
-
-  const handleNewAddressChange = (e) => {
-    const { name, value } = e.target;
-    setNewShippingAddress(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  // Add this validation function
+  const isValidVietnamesePhoneNumber = (phoneNumber) => {
+    // Regular expression for Vietnamese phone numbers
+    const phoneRegex = /^(84|0[3|5|7|8|9])+([0-9]{8})$/;
+    return phoneRegex.test(phoneNumber);
   };
-
-  const fetchProvinces = async () => {
-    try {
-      const response = await axios.get(
-        'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/province',
-        {
-          headers: { 'Token': '780e97f0-7ffa-11ef-8e53-0a00184fe694' }
-        }
-      );
-      setProvinces(response.data.data || []);
-    } catch (error) {
-      console.error('Error fetching provinces:', error);
-      toast.error('Failed to load provinces');
-    }
-  };
-
-  const fetchDistricts = async (provinceId) => {
-    try {
-      const response = await axios.post(
-        'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/district',
-        { province_id: parseInt(provinceId) },
-        {
-          headers: { 'Token': '780e97f0-7ffa-11ef-8e53-0a00184fe694' }
-        }
-      );
-      setDistricts(response.data.data || []);
-    } catch (error) {
-      console.error('Error fetching districts:', error);
-      toast.error('Failed to load districts');
-    }
-  };
-
-  const fetchWards = async (districtId) => {
-    try {
-      const response = await axios.post(
-        'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/ward',
-        { district_id: parseInt(districtId) },
-        {
-          headers: { 'Token': '780e97f0-7ffa-11ef-8e53-0a00184fe694' }
-        }
-      );
-      setWards(response.data.data || []);
-    } catch (error) {
-      console.error('Error fetching wards:', error);
-      toast.error('Failed to load wards');
-    }
-  };
-
-  // Add this new function to handle address confirmation
-  const handleConfirmNewAddress = async () => {
-    // Validate all required fields
-    if (!newShippingAddress.recipientName || 
-        !newShippingAddress.provinceCode || 
-        !newShippingAddress.districtCode || 
-        !newShippingAddress.wardCode || 
-        !newShippingAddress.AddressDetail || 
-        !newShippingAddress.phoneNumber) {
-      toast.error('Vui lòng điền đầy đủ thông tin');
-      return;
-    }
-
-    try {
-      const result = await Swal.fire({
-        title: 'Xác nhận địa chỉ giao hàng',
-        html: `
-          <div class="text-left">
-            <p><strong>Người nhận:</strong> ${newShippingAddress.recipientName}</p>
-            <p><strong>Số điện thoại:</strong> ${newShippingAddress.phoneNumber}</p>
-            <p><strong>Địa chỉ:</strong> ${newShippingAddress.AddressDetail}</p>
-            <p><strong>Khu vực:</strong> ${provinces.find(p => p.ProvinceID === parseInt(newShippingAddress.provinceCode))?.ProvinceName}, 
-            ${districts.find(d => d.DistrictID === parseInt(newShippingAddress.districtCode))?.DistrictName}, 
-            ${wards.find(w => w.WardCode === newShippingAddress.wardCode)?.WardName}</p>
-          </div>
-        `,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Xác nhận',
-        cancelButtonText: 'Hủy'
-      });
-
-      if (result.isConfirmed) {
-        // Create a temporary address object for fee calculation
-        const tempAddress = {
-          addressId: Date.now(), // Temporary ID
-          districtCode: newShippingAddress.districtCode,
-          wardCode: newShippingAddress.wardCode,
-          addressDetail: newShippingAddress.AddressDetail,
-          phoneNumber: newShippingAddress.phoneNumber,
-          userName: newShippingAddress.recipientName,
-        };
-
-        // Set as selected address and calculate shipping fee
-        setSelectedAddress(tempAddress);
-        await calculateShippingFeeForAddress(tempAddress);
-        
-        Swal.fire({
-          title: 'Thành công!',
-          text: 'Đã xác nhận địa chỉ giao hàng',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false
-        });
-      }
-    } catch (error) {
-      console.error('Error confirming address:', error);
-      Swal.fire({
-        title: 'Lỗi!',
-        text: 'Không thể xác nhận địa chỉ. Vui lòng thử lại.',
-        icon: 'error'
-      });
-    }
-  };
-
-  // Update the renderAddressForm to include the confirm button
-  const renderAddressForm = () => (
-    <div>
-      <Form className="space-y-4">
-        <Row className="mb-3">
-          <Col>
-            <Form.Group>
-              <Form.Label>Recipient Name</Form.Label>
-              <Form.Control
-                type="text"
-                name="recipientName"
-                value={newShippingAddress.recipientName}
-                onChange={handleNewAddressChange}
-                required
-                placeholder="Enter recipient's name"
-              />
-            </Form.Group>
-          </Col>
-        </Row>
-
-        <Row className="mb-3">
-          <Col>
-            <Form.Group>
-              <Form.Label>Province</Form.Label>
-              <Form.Select
-                name="provinceCode"
-                value={newShippingAddress.provinceCode}
-                onChange={(e) => {
-                  handleNewAddressChange(e);
-                  fetchDistricts(e.target.value);
-                  setNewShippingAddress(prev => ({ ...prev, districtCode: '', wardCode: '' }));
-                }}
-                required
-              >
-                <option value="">Select Province</option>
-                {provinces.map(province => (
-                  <option key={province.ProvinceID} value={province.ProvinceID}>
-                    {province.ProvinceName}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </Col>
-          <Col>
-            <Form.Group>
-              <Form.Label>District</Form.Label>
-              <Form.Select
-                name="districtCode"
-                value={newShippingAddress.districtCode}
-                onChange={(e) => {
-                  handleNewAddressChange(e);
-                  fetchWards(e.target.value);
-                  setNewShippingAddress(prev => ({ ...prev, wardCode: '' }));
-                }}
-                required
-                disabled={!newShippingAddress.provinceCode}
-              >
-                <option value="">Select District</option>
-                {districts.map(district => (
-                  <option key={district.DistrictID} value={district.DistrictID}>
-                    {district.DistrictName}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </Col>
-          <Col>
-            <Form.Group>
-              <Form.Label>Ward</Form.Label>
-              <Form.Select
-                name="wardCode"
-                value={newShippingAddress.wardCode}
-                onChange={handleNewAddressChange}
-                required
-                disabled={!newShippingAddress.districtCode}
-              >
-                <option value="">Select Ward</option>
-                {wards.map(ward => (
-                  <option key={ward.WardCode} value={ward.WardCode}>
-                    {ward.WardName}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </Col>
-        </Row>
-
-        <Row className="mb-3">
-          <Col>
-            <Form.Group>
-              <Form.Label>Address Detail</Form.Label>
-              <Form.Control
-                as="textarea"
-                name="AddressDetail"
-                value={newShippingAddress.AddressDetail}
-                onChange={handleNewAddressChange}
-                rows={2}
-                required
-                placeholder="Enter street address, building, etc."
-              />
-            </Form.Group>
-          </Col>
-        </Row>
-
-        <Row className="mb-3">
-          <Col>
-            <Form.Group>
-              <Form.Label>Phone Number</Form.Label>
-              <Form.Control
-                type="tel"
-                name="phoneNumber"
-                value={newShippingAddress.phoneNumber}
-                onChange={handleNewAddressChange}
-                required
-                placeholder="Enter recipient's phone number"
-              />
-            </Form.Group>
-          </Col>
-        </Row>
-      </Form>
-
-      {/* Updated confirm button styling */}
-      <div className="mt-4 flex justify-end">
-        <Button
-          onClick={handleConfirmNewAddress}
-          className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white transition-colors duration-200 border-none"
-          style={{ width: 'auto', backgroundColor: '#f97316', border: 'none' }}
-        >
-          Xác Nhận Địa Chỉ
-        </Button>
-      </div>
-
-      {/* Show confirmed address details */}
-      {selectedAddress && addressMode === 'new' && (
-        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-          <h4 className="font-medium mb-2">Confirmed Address Details:</h4>
-          <p><span className="font-medium">Recipient:</span> {selectedAddress.userName}</p>
-          <p><span className="font-medium">Phone:</span> {selectedAddress.phoneNumber}</p>
-          <p><span className="font-medium">Address:</span> {selectedAddress.addressDetail}</p>
-          <p><span className="font-medium">Location:</span> {' '}
-            {provinces.find(p => p.ProvinceID === parseInt(newShippingAddress.provinceCode))?.ProvinceName}, {' '}
-            {districts.find(d => d.DistrictID === parseInt(newShippingAddress.districtCode))?.DistrictName}, {' '}
-            {wards.find(w => w.WardCode === newShippingAddress.wardCode)?.WardName}
-          </p>
-        </div>
-      )}
-    </div>
-  );
-
-  // Update the renderAddressDropdown to use the new form
-  const renderAddressDropdown = () => (
-    <div className="bg-white rounded-lg shadow p-6 mb-6">
-      <h3 className="text-lg font-semibold mb-4">Địa Chỉ Giao Hàng</h3>
-      
-      {/* Address Mode Selection */}
-      <div className="flex space-x-4 mb-6">
-        <button
-          className={`flex-1 py-2 px-4 rounded-lg border transition-all duration-300 ease-in-out ${
-            addressMode === 'select'
-              ? 'bg-orange-100 border-orange-500 text-orange-700 opacity-100'
-              : 'border-gray-300 text-gray-600 hover:border-orange-300 opacity-75 hover:opacity-100'
-          }`}
-          onClick={() => setAddressMode('select')}
-        >
-          Dùng Địa Chỉ Của Tôi
-        </button>
-        <button
-          className={`flex-1 py-2 px-4 rounded-lg border transition-all duration-300 ease-in-out ${
-            addressMode === 'new'
-              ? 'bg-orange-100 border-orange-500 text-orange-700 opacity-100'
-              : 'border-gray-300 text-gray-600 hover:border-orange-300 opacity-75 hover:opacity-100'
-          }`}
-          onClick={() => setAddressMode('new')}
-        >
-          Giao Đến Địa Chỉ Khác
-        </button>
-      </div>
-
-      {addressMode === 'select' ? (
-        // Existing Addresses Section
-        addresses.length > 0 ? (
-          <div className="space-y-4">
-            <div className="relative">
-              <select
-                className={`w-full p-2 border rounded-lg ${
-                  isAddressLoading || isRecipientLoading ? 'bg-gray-100' : 'bg-white'
-                }`}
-                value={selectedAddress?.addressId || ''}
-                onChange={async (e) => {
-                  const selected = addresses.find(addr => addr.addressId === parseInt(e.target.value));
-                  if (selected) {
-                    setIsAddressLoading(true);
-                    setSelectedAddress(selected);
-                    try {
-                      // Fetch recipient details immediately after selection
-                      const response = await axios.get(
-                        `https://rmrbdapi.somee.com/odata/Account/${selected.accountId}`,
-                        {
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'Token': '123-abc',
-                          },
-                        }
-                      );
-                      
-                      setSelectedAddress(prev => ({
-                        ...prev,
-                        accountName: response.data.userName,
-                        userName: response.data.userName
-                      }));
-                      
-                      // Calculate shipping fee after recipient details are loaded
-                      await calculateShippingFeeForAddress(selected);
-                    } catch (error) {
-                      console.error('Error loading address details:', error);
-                      toast.error('Failed to load address details');
-                    } finally {
-                      setIsAddressLoading(false);
-                    }
-                  } else {
-                    setSelectedAddress(null);
-                  }
-                }}
-                disabled={isAddressLoading || isRecipientLoading}
-              >
-                <option value="">Chọn Địa Chỉ</option>
-                {addresses.map((address) => {
-                  const locationDetails = addressDetails[address.addressId] || {};
-                  const account = accountDetails[address.accountId];
-                  
-                  return (
-                    <option key={address.addressId} value={address.addressId}>
-                      {`${address.addressDetail}, 
-                      ${locationDetails.wardName || 'Loading...'}, 
-                      ${locationDetails.districtName || 'Loading...'}, 
-                      ${locationDetails.provinceName || 'Loading...'}`}
-                    </option>
-                  );
-                })}
-              </select>
-              {(isAddressLoading || isRecipientLoading) && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-50">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
-                </div>
-              )}
-            </div>
-            
-            {selectedAddress && !isAddressLoading && !isRecipientLoading && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-medium mb-2">Chi Tiết Địa Chỉ Đã Chọn:</h4>
-                <p><span className="font-medium">Người Nhận:</span> {selectedAddress.userName || selectedAddress.accountName || 'Đang tải...'}</p>
-                <p><span className="font-medium">Số Điện Thoại:</span> {selectedAddress.phoneNumber}</p>
-                <p><span className="font-medium">Địa Chỉ:</span> {selectedAddress.addressDetail}</p>
-                <p><span className="font-medium">Khu Vực:</span> {' '}
-                  {addressDetails[selectedAddress.addressId]?.wardName || 'Đang tải...'}, {' '}
-                  {addressDetails[selectedAddress.addressId]?.districtName || 'Đang tải...'}, {' '}
-                  {addressDetails[selectedAddress.addressId]?.provinceName || 'Đang tải...'}
-                </p>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center py-4">
-            <p className="text-gray-500 mb-2">Không tìm thấy địa chỉ đã lưu</p>
-            <button
-              onClick={() => navigate('/address')}
-              className="text-orange-600 hover:text-orange-700 font-medium"
-            >
-              + Thêm Địa Chỉ Mới Vào Hồ Sơ
-            </button>
-          </div>
-        )
-      ) : (
-        // New Address Form
-        <Form className="space-y-4">
-          <Row className="mb-3">
-            <Col>
-              <Form.Group>
-                <Form.Label>Tên Người Nhận</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="recipientName"
-                  value={newShippingAddress.recipientName}
-                  onChange={handleNewAddressChange}
-                  required
-                  placeholder="Nhập tên người nhận"
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-
-          <Row className="mb-3">
-            <Col>
-              <Form.Group>
-                <Form.Label>Tỉnh/Thành Phố</Form.Label>
-                <Form.Select
-                  name="provinceCode"
-                  value={newShippingAddress.provinceCode}
-                  onChange={(e) => {
-                    handleNewAddressChange(e);
-                    fetchDistricts(e.target.value);
-                    setNewShippingAddress(prev => ({ ...prev, districtCode: '', wardCode: '' }));
-                  }}
-                  required
-                >
-                  <option value="">Chọn Tỉnh/Thành Phố</option>
-                  {provinces.map(province => (
-                    <option key={province.ProvinceID} value={province.ProvinceID}>
-                      {province.ProvinceName}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col>
-              <Form.Group>
-                <Form.Label>Quận/Huyện</Form.Label>
-                <Form.Select
-                  name="districtCode"
-                  value={newShippingAddress.districtCode}
-                  onChange={(e) => {
-                    handleNewAddressChange(e);
-                    fetchWards(e.target.value);
-                    setNewShippingAddress(prev => ({ ...prev, wardCode: '' }));
-                  }}
-                  required
-                  disabled={!newShippingAddress.provinceCode}
-                >
-                  <option value="">Chọn Quận/Huyện</option>
-                  {districts.map(district => (
-                    <option key={district.DistrictID} value={district.DistrictID}>
-                      {district.DistrictName}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col>
-              <Form.Group>
-                <Form.Label>Phường/Xã</Form.Label>
-                <Form.Select
-                  name="wardCode"
-                  value={newShippingAddress.wardCode}
-                  onChange={handleNewAddressChange}
-                  required
-                  disabled={!newShippingAddress.districtCode}
-                >
-                  <option value="">Chọn Phường/Xã</option>
-                  {wards.map(ward => (
-                    <option key={ward.WardCode} value={ward.WardCode}>
-                      {ward.WardName}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-            </Col>
-          </Row>
-
-          <Row className="mb-3">
-            <Col>
-              <Form.Group>
-                <Form.Label>Địa Chỉ Chi Tiết</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  name="AddressDetail"
-                  value={newShippingAddress.AddressDetail}
-                  onChange={handleNewAddressChange}
-                  rows={2}
-                  required
-                  placeholder="Nhập số nhà, tên đường..."
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-
-          <Row className="mb-3">
-            <Col>
-              <Form.Group>
-                <Form.Label>Số Điện Thoại</Form.Label>
-                <Form.Control
-                  type="tel"
-                  name="phoneNumber"
-                  value={newShippingAddress.phoneNumber}
-                  onChange={handleNewAddressChange}
-                  required
-                  placeholder="Nhập số điện thoại người nhận"
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-
-          <div className="mt-4 flex justify-end">
-            <Button
-              onClick={handleConfirmNewAddress}
-              className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white transition-colors duration-200 border-none"
-              style={{ width: 'auto', backgroundColor: '#f97316', border: 'none' }}
-            >
-              Xác Nhận Địa Chỉ
-            </Button>
-          </div>
-        </Form>
-      )}
-    </div>
-  );
 
   // Add this new helper function for dynamic currency formatting
   const formatAmount = (amount, paymentType = paymentMethod) => {
@@ -955,7 +452,7 @@ const Checkout = () => {
     'COINS': 1   // Pay with Coins is type 1
   };
 
-  // Modify handlePlaceOrder to handle grouped orders
+  // Modify handlePlaceOrder to track and delete parent orders
   const handlePlaceOrder = async () => {
     try {
       setIsProcessing(true);
@@ -1012,6 +509,15 @@ const Checkout = () => {
         }
       }
 
+      // Store order detail IDs and their parent order IDs
+      const orderInfo = selectedOrders.reduce((acc, order) => {
+        if (!acc[order.orderId]) {
+          acc[order.orderId] = [];
+        }
+        acc[order.orderId].push(order.orderDetailId);
+        return acc;
+      }, {});
+
       // Create shipping orders for each group
       const shippingOrderPromises = Object.entries(groupedOrders).map(async ([senderAddressId, orders]) => {
         const senderAddressResponse = await axios.get(
@@ -1050,15 +556,8 @@ const Checkout = () => {
           paymentType: paymentTypeMap[paymentMethod],
           orderCode: shippingOrders[index].data?.order_code || null,
           status: 1,
-          clientAddressId: addressMode === 'select' ? parseInt(selectedAddress.addressId) : null,
-          shippingAddress: addressMode === 'new' ? {
-            recipientName: selectedAddress.userName,
-            phoneNumber: selectedAddress.phoneNumber,
-            addressDetail: selectedAddress.addressDetail,
-            wardCode: selectedAddress.wardCode,
-            districtCode: selectedAddress.districtCode,
-            provinceCode: selectedAddress.provinceCode
-          } : null,
+          clientAddressId: parseInt(selectedAddress.addressId),
+          shippingAddress: null,
           bookOrderDetails: orders.map(order => ({
             bookId: order.bookDetails.bookId,
             quantity: order.quantity,
@@ -1095,6 +594,27 @@ const Checkout = () => {
           paymentTypeMap[paymentMethod]
         );
       }));
+
+      // After successful order creation, delete order details and check parent orders
+      for (const [orderId, detailIds] of Object.entries(orderInfo)) {
+        // Delete all order details for this order
+        await Promise.all(detailIds.map(id => deleteOrderDetail(id)));
+
+        // Check if any order details remain for this order
+        const response = await axios.get(`https://rmrbdapi.somee.com/odata/BookOrderDetail`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Token': '123-abc'
+          }
+        });
+        
+        const remainingDetails = response.data.filter(detail => detail.orderId === parseInt(orderId));
+        
+        // If no details remain, delete the parent order
+        if (remainingDetails.length === 0) {
+          await deleteParentOrder(orderId);
+        }
+      }
 
       await Swal.fire({
         position: "center",
@@ -1254,7 +774,142 @@ const Checkout = () => {
         </div>
 
         {/* Address Dropdown */}
-        {renderAddressDropdown()}
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h3 className="text-lg font-semibold mb-4">Địa Chỉ Giao Hàng</h3>
+          
+          {/* Address Selection */}
+          {addresses.length > 0 ? (
+            <div className="space-y-4">
+              <div className="relative">
+                <select
+                  className={`w-full p-2 border rounded-lg ${
+                    isAddressLoading || isRecipientLoading ? 'bg-gray-100' : 'bg-white'
+                  }`}
+                  value={selectedAddress?.addressId || ''}
+                  onChange={async (e) => {
+                    if (e.target.value === 'manage-addresses') {
+                      navigate('/manage-addresses');
+                      return;
+                    }
+                    const selected = addresses.find(addr => addr.addressId === parseInt(e.target.value));
+                    if (selected) {
+                      setIsAddressLoading(true);
+                      setSelectedAddress(selected);
+                      try {
+                        // Fetch recipient details immediately after selection
+                        const response = await axios.get(
+                          `https://rmrbdapi.somee.com/odata/Account/${selected.accountId}`,
+                          {
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Token': '123-abc',
+                            },
+                          }
+                        );
+                        
+                        setSelectedAddress(prev => ({
+                          ...prev,
+                          accountName: response.data.userName,
+                          userName: response.data.userName
+                        }));
+                        
+                        // Calculate shipping fee after recipient details are loaded
+                        await calculateShippingFeeForAddress(selected);
+                      } catch (error) {
+                        console.error('Error loading address details:', error);
+                        toast.error('Failed to load address details');
+                      } finally {
+                        setIsAddressLoading(false);
+                      }
+                    } else {
+                      setSelectedAddress(null);
+                    }
+                  }}
+                  disabled={isAddressLoading || isRecipientLoading}
+                >
+                  <option value="">Chọn Địa Chỉ</option>
+                  {addresses.map((address) => {
+                    const locationDetails = addressDetails[address.addressId] || {};
+                    const account = accountDetails[address.accountId];
+                    
+                    return (
+                      <option key={address.addressId} value={address.addressId}>
+                        {`${address.addressDetail}, 
+                        ${locationDetails.wardName || 'Loading...'}, 
+                        ${locationDetails.districtName || 'Loading...'}, 
+                        ${locationDetails.provinceName || 'Loading...'}`}
+                      </option>
+                    );
+                  })}
+                  <option value="manage-addresses" className="text-orange-500 font-medium border-t border-gray-200">
+                    + Thêm Địa Chỉ Mới...
+                  </option>
+                </select>
+                {(isAddressLoading || isRecipientLoading) && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-50">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
+                  </div>
+                )}
+              </div>
+              
+              {selectedAddress && !isAddressLoading && !isRecipientLoading && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium mb-2">Chi Tiết Địa Chỉ Đã Chọn:</h4>
+                  <p><span className="font-medium">Người Nhận:</span> {selectedAddress.userName || selectedAddress.accountName || 'Đang tải...'}</p>
+                  <p><span className="font-medium">Số Điện Thoại:</span> {selectedAddress.phoneNumber}</p>
+                  <p><span className="font-medium">Địa Chỉ:</span> {selectedAddress.addressDetail}</p>
+                  <p><span className="font-medium">Khu Vực:</span> {' '}
+                    {addressDetails[selectedAddress.addressId]?.wardName || 'Đang tải...'}, {' '}
+                    {addressDetails[selectedAddress.addressId]?.districtName || 'Đang tải...'}, {' '}
+                    {addressDetails[selectedAddress.addressId]?.provinceName || 'Đang tải...'}
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-6 bg-gray-50 rounded-lg border border-gray-200">
+              <svg 
+                className="mx-auto h-12 w-12 text-gray-400 mb-3" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              <p className="text-gray-600 mb-3">Bạn chưa có địa chỉ giao hàng nào</p>
+              <button
+                onClick={() => navigate('/manage-addresses')}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              >
+                <svg 
+                  className="-ml-1 mr-2 h-5 w-5" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                Thêm Địa Chỉ Mới
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Payment Method Selection */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -1324,6 +979,12 @@ const Checkout = () => {
               <span>Phí Vận Chuyển:</span>
               <span>{formatAmount(shippingFee)}</span>
             </div>
+            {expectedDeliveryTime && (
+              <div className="flex justify-between text-black">
+                <span>Thời Gian Giao Hàng Dự Kiến:</span>
+                <span>{formatDeliveryDate(expectedDeliveryTime)}</span>
+              </div>
+            )}
             <div className="border-t pt-2 mt-2">
               <div className="flex justify-between font-semibold text-lg">
                 <span>Tổng Cộng:</span>

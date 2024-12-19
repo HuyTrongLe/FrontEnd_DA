@@ -1,23 +1,34 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { checkEbookOwnership } from '../../services/EbookService';
 import Cookies from 'js-cookie';
 import { decryptData } from "../../Encrypt/encryptionUtils";
 
 const EbookCard = ({ ebook }) => {
-  const [isOwned, setIsOwned] = useState(false);
+  const customerId = decryptData(Cookies.get('UserId'));
+  
+  // Ensure we have valid values for comparison and handle type coercion
+  const createById = ebook.createById || ebook.createBy || null; // Try both possible field names
+  const isCreator = Boolean(createById) && Boolean(customerId) && 
+                   Number(createById) === Number(customerId); // Use Number for comparison
+  const isOwned = Boolean(ebook.isOwned) || Boolean(ebook.isPurchased) || isCreator;
 
-  useEffect(() => {
-    const checkOwnership = async () => {
-      const customerId = decryptData(Cookies.get('UserId'));
-      if (customerId) {
-        const owned = await checkEbookOwnership(customerId, ebook.ebookId);
-        setIsOwned(owned);
-      }
-    };
-
-    checkOwnership();
-  }, [ebook.ebookId]);
+  // Debug logs with more detailed information
+  console.log('Card Debug:', {
+    bookName: ebook.ebookName,
+    customerId,
+    createById,
+    createBy: ebook.createBy,
+    isCreator,
+    isOwned,
+    isPurchased: ebook.isPurchased,
+    comparison: {
+      createById: typeof createById,
+      customerId: typeof customerId,
+      createByIdValue: createById,
+      customerIdValue: customerId,
+      isEqual: Number(createById) === Number(customerId)
+    }
+  });
 
   return (
     <div className="flex flex-col">
@@ -34,14 +45,13 @@ const EbookCard = ({ ebook }) => {
             src={ebook.imageUrl}
             alt={ebook.ebookName}
             className="w-full h-full object-cover rounded-lg"
-            // className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-110"
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = 'https://via.placeholder.com/300x400?text=No+Image';
             }}
           />
 
-          {/* Hover Overlay - Updated with stronger contrast */}
+          {/* Hover Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
               <h3 className="text-lg font-semibold mb-2">{ebook.ebookName}</h3>
@@ -54,7 +64,9 @@ const EbookCard = ({ ebook }) => {
         {ebook.ebookName}
       </h3>
       <p className="text-center text-gray-600">
-        {isOwned ? (
+        {isCreator ? (
+          <span className="text-green-600 font-medium">Đã sở hữu (Tác giả)</span>
+        ) : isOwned ? (
           <span className="text-green-600 font-medium">Đã sở hữu</span>
         ) : ebook.price === 0 ? (
           <span className="text-green-600 font-medium">Miễn phí</span>

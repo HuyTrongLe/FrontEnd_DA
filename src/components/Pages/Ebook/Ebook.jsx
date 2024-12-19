@@ -14,18 +14,31 @@ function Ebook() {
     priceRange: null,
   });
 
-  // Cache user ID
-  const customerId = useMemo(() => decryptData(Cookies.get('UserId'), []));
+  // Get and validate customer ID once
+  const customerId = useMemo(() => {
+    const userId = Cookies.get('UserId');
+    if (!userId) return null;
+    
+    const decryptedId = decryptData(userId);
+    if (!decryptedId) {
+      console.error('Failed to decrypt user ID');
+      return null;
+    }
+    return decryptedId;
+  }, []);
 
   // Optimize data fetching
   const fetchEbooks = async () => {
     try {
       setLoading(true);
       
-      // Parallel requests for better performance
+      if (!customerId) {
+        setError("User authentication required");
+        return;
+      }
+      
       const [ebooksData] = await Promise.all([
         getEbooks(),
-        // Add other parallel requests here if needed
       ]);
 
       if (!ebooksData || ebooksData.length === 0) {
@@ -33,21 +46,28 @@ function Ebook() {
         return;
       }
 
-      // Batch ownership checks for better performance
-      let ebooksWithOwnership = ebooksData;
-      if (customerId) {
-        const ownershipChecks = await Promise.all(
-          ebooksData.map(ebook => 
-            checkEbookOwnership(customerId, ebook.ebookId)
-              .catch(() => false) // Handle individual failures gracefully
-          )
-        );
-        
-        ebooksWithOwnership = ebooksData.map((ebook, index) => ({
-          ...ebook,
-          isOwned: ownershipChecks[index]
-        }));
-      }
+      // Add error handling for ownership checks
+      const ebooksWithOwnership = await Promise.all(
+        ebooksData.map(async (ebook) => {
+          try {
+            const isOwned = await checkEbookOwnership(customerId, ebook.ebookId);
+            return {
+              ...ebook,
+              isCreator: ebook.createById === customerId,
+              isPurchased: isOwned,
+              isOwned: isOwned || ebook.createById === customerId
+            };
+          } catch (error) {
+            console.error(`Error checking ownership for book ${ebook.ebookId}:`, error);
+            return {
+              ...ebook,
+              isCreator: ebook.createById === customerId,
+              isPurchased: false,
+              isOwned: ebook.createById === customerId
+            };
+          }
+        })
+      );
 
       setEbooks(ebooksWithOwnership);
     } catch (error) {
@@ -91,8 +111,10 @@ function Ebook() {
 
   // Use effect with proper dependencies
   useEffect(() => {
-    fetchEbooks();
-  }, []); // Empty dependency array since filters are now handled by useMemo
+    if (customerId) {
+      fetchEbooks();
+    }
+  }, [customerId]); // Add customerId as dependency
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);

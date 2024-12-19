@@ -87,22 +87,29 @@ const Orders = () => {
 
   useEffect(() => {
     const fetchOrderStatuses = async () => {
-      const statusPromises = orders.map(async (order) => {
-        if (order.orderCode) {
-          try {
-            const status = await getShippingOrderStatus(order.orderCode);
-            return [order.orderId, status];
-          } catch (error) {
-            console.error(`Error fetching status for order ${order.orderId}:`, error);
-            return [order.orderId, null];
+      try {
+        const statusResponse = await axios.get(
+          'https://rmrbdapi.somee.com/odata/bookorderstatus',
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Token': '123-abc',
+            },
           }
-        }
-        return [order.orderId, null];
-      });
+        );
 
-      const statuses = await Promise.all(statusPromises);
-      const statusMap = Object.fromEntries(statuses);
-      setOrderStatuses(statusMap);
+        // Create a map of latest status for each order
+        const statusMap = {};
+        statusResponse.data.forEach(status => {
+          if (!statusMap[status.orderId] || new Date(status.statusDate) > new Date(statusMap[status.orderId].statusDate)) {
+            statusMap[status.orderId] = status;
+          }
+        });
+
+        setOrderStatuses(statusMap);
+      } catch (error) {
+        console.error('Error fetching order statuses:', error);
+      }
     };
 
     if (orders.length > 0) {
@@ -111,22 +118,23 @@ const Orders = () => {
   }, [orders]);
 
   const getStatusDisplay = (order) => {
-    const shippingStatus = orderStatuses[order.orderId];
-    if (!shippingStatus) return 'Đang Xử Lý';
+    const status = orderStatuses[order.orderId];
+    if (!status) return 'Đang Xử Lý';
 
-    switch (shippingStatus.status) {
-      case 1:
+    switch (status.details?.toLowerCase()) {
+      case 'ready_to_pick':
         return 'Đang Xử Lý';
-      case 2:
-        return 'Đã Hoàn Thành';
-      case 3:
+      case 'cancel':
         return 'Đã Hủy';
+      case 'completed':
+        return 'Đã Hoàn Thành';
       default:
         return 'Đang Xử Lý';
     }
   };
 
-  const getStatusColor = () => {
+  const getStatusColor = (status) => {
+    if (status === 'Đã Hủy') return 'text-red-600';
     return 'text-orange-800';
   };
 
@@ -329,7 +337,7 @@ const Orders = () => {
                   <div className="mt-4 flex justify-between items-center">
                     <div>
                       <span className="font-semibold">Tình Trạng: </span>
-                      <span className="text-orange-800">
+                      <span className={getStatusColor(getStatusDisplay(order))}>
                         {getStatusDisplay(order)}
                       </span>
                     </div>
@@ -338,7 +346,8 @@ const Orders = () => {
                       {formatAmount(order.shipFee, order.paymentType)}
                     </div>
 
-                    {orderStatuses[order.orderId]?.status === 1 && (
+                    {orderStatuses[order.orderId]?.status === 1 && 
+                      orderStatuses[order.orderId]?.details?.toLowerCase() !== 'completed' && (
                       <button
                         onClick={() => handleCancelOrder(order.orderCode)}
                         className="px-4 py-2 bg-orange-400 text-white rounded 

@@ -588,9 +588,9 @@ const Navbar = () => {
               <Button
                 variant="gradient"
                 size="sm"
-                className={`hidden lg:inline-block bg-gray-300 text-white`}
+                className={`hidden lg:inline-block bg-gray-300 text-white text-sm`}
               >
-                <NavLink to="/login">Log In</NavLink>
+                <NavLink to="/login">Đăng Nhập</NavLink>
               </Button>
             </div>
           )}
@@ -718,7 +718,7 @@ const Navbar = () => {
                     ) : (
                       <>
                         <Button fullWidth variant="text" size="sm">
-                          <NavLink to="/login">Log in</NavLink>
+                          <NavLink to="/login">Đăng nhập</NavLink>
                         </Button>
                       </>
                     )}

@@ -43,9 +43,8 @@ const OrderFullDetails = () => {
           .filter(status => status.orderId === parseInt(orderId))
           .sort((a, b) => new Date(b.statusDate) - new Date(a.statusDate));
 
-        console.log('Order statuses:', orderStatuses);
-
-        const cancelledStatus = orderStatuses.find(s => s.status === 3);
+        const cancelledStatus = orderStatuses.find(s => s.details?.toLowerCase() === 'cancel');
+        const completedStatus = orderStatuses.find(s => s.details?.toLowerCase() === 'completed');
         const latestStatus = orderStatuses[0];
         
         setOrderDetails(orderResponse.data);
@@ -53,6 +52,8 @@ const OrderFullDetails = () => {
         
         if (cancelledStatus) {
           setShippingStatus(cancelledStatus);
+        } else if (completedStatus) {
+          setShippingStatus(completedStatus);
         } else if (latestStatus) {
           setShippingStatus(latestStatus);
         }

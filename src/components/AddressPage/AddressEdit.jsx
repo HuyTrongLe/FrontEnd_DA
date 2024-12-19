@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Container, Button } from 'react-bootstrap';
+import { Container, Button, Modal } from 'react-bootstrap';
 import "bootstrap/dist/css/bootstrap.min.css";
 import Swal from 'sweetalert2';
 import Cookies from 'js-cookie';
@@ -9,6 +9,7 @@ import { FaEdit, FaMapMarkerAlt, FaPhone, FaPlus, FaMapMarked } from 'react-icon
 import Sidebar from '../Customer/Sidebar';
 import { useNavigate } from 'react-router-dom';
 import { decryptData } from "../Encrypt/encryptionUtils";
+import { Form } from 'react-bootstrap';
 const formatPhoneNumber = (number) => {
   // Remove any non-digit characters
   let cleaned = number.replace(/\D/g, '');
@@ -44,6 +45,11 @@ const AddressEdit = () => {
   const [addresses, setAddresses] = useState([]);
   const userId = decryptData(Cookies.get("UserId"));
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState(null);
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
 
   useEffect(() => {
     const fetchAddressesWithDetails = async () => {
@@ -126,9 +132,37 @@ const AddressEdit = () => {
     }
   };
 
-  const handleEditAddress = (address) => {
-    // No need to fetch districts and wards here since the modal is removed
-    // The component will redirect to /address when the "Thêm địa chỉ mới" button is clicked
+  const handleEditAddress = async (address) => {
+    setSelectedAddress(address);
+    try {
+      // Fetch provinces first
+      const provinceResponse = await axios.get(
+        'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/province',
+        { headers: { 'Token': '780e97f0-7ffa-11ef-8e53-0a00184fe694' } }
+      );
+      setProvinces(provinceResponse.data.data || []);
+
+      // Fetch districts for the selected province
+      const districtResponse = await axios.post(
+        'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/district',
+        { province_id: Number(address.provinceCode) },
+        { headers: { 'Token': '780e97f0-7ffa-11ef-8e53-0a00184fe694' } }
+      );
+      setDistricts(districtResponse.data.data || []);
+
+      // Fetch wards for the selected district
+      const wardResponse = await axios.post(
+        'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/ward',
+        { district_id: Number(address.districtCode) },
+        { headers: { 'Token': '780e97f0-7ffa-11ef-8e53-0a00184fe694' } }
+      );
+      setWards(wardResponse.data.data || []);
+
+      setShowModal(true);
+    } catch (error) {
+      console.error('Error fetching location data:', error);
+      showErrorAlert('Error loading location data');
+    }
   };
 
   const handleInputChange = (e) => {
@@ -289,7 +323,7 @@ const AddressEdit = () => {
         }
       );
   
-      if (response.status === 200 || response.status === 201) {
+      if (response.status === 200 || response.status === 201 | response.status === 204) {
         // Update the address in the local state
         setAddresses(prevAddresses => {
           return prevAddresses.map(addr => {
@@ -341,6 +375,47 @@ const AddressEdit = () => {
         confirmButtonColor: '#f97316'
       });
       console.error('Error saving address:', error);
+    }
+  };
+
+  const handleProvinceChange = async (e) => {
+    const provinceCode = e.target.value;
+    setSelectedAddress(prev => ({ ...prev, provinceCode, districtCode: '', wardCode: '' }));
+    setDistricts([]);
+    setWards([]);
+
+    if (provinceCode) {
+      try {
+        const response = await axios.post(
+          'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/district',
+          { province_id: Number(provinceCode) },
+          { headers: { 'Token': '780e97f0-7ffa-11ef-8e53-0a00184fe694' } }
+        );
+        setDistricts(response.data.data || []);
+      } catch (error) {
+        console.error('Error fetching districts:', error);
+        showErrorAlert('Error loading districts');
+      }
+    }
+  };
+
+  const handleDistrictChange = async (e) => {
+    const districtCode = e.target.value;
+    setSelectedAddress(prev => ({ ...prev, districtCode, wardCode: '' }));
+    setWards([]);
+
+    if (districtCode) {
+      try {
+        const response = await axios.post(
+          'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/ward',
+          { district_id: Number(districtCode) },
+          { headers: { 'Token': '780e97f0-7ffa-11ef-8e53-0a00184fe694' } }
+        );
+        setWards(response.data.data || []);
+      } catch (error) {
+        console.error('Error fetching wards:', error);
+        showErrorAlert('Error loading wards');
+      }
     }
   };
 
@@ -428,6 +503,116 @@ const AddressEdit = () => {
           </div>
         </Container>
       </div>
+
+      {/* Add Modal */}
+      <Modal 
+        show={showModal} 
+        onHide={() => setShowModal(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton className="border-b">
+          <Modal.Title className="text-xl font-semibold">Chỉnh Sửa Địa Chỉ</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={saveAddress}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              {/* Province Select */}
+              <Form.Group>
+                <Form.Label>Tỉnh/Thành Phố</Form.Label>
+                <Form.Select
+                  value={selectedAddress?.provinceCode || ''}
+                  onChange={handleProvinceChange}
+                  required
+                >
+                  <option value="">Chọn Tỉnh/Thành Phố</option>
+                  {provinces.map((province) => (
+                    <option key={province.ProvinceID} value={province.ProvinceID}>
+                      {province.ProvinceName}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+
+              {/* District Select */}
+              <Form.Group>
+                <Form.Label>Quận/Huyện</Form.Label>
+                <Form.Select
+                  value={selectedAddress?.districtCode || ''}
+                  onChange={handleDistrictChange}
+                  required
+                >
+                  <option value="">Chọn Quận/Huyện</option>
+                  {districts.map((district) => (
+                    <option key={district.DistrictID} value={district.DistrictID}>
+                      {district.DistrictName}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+
+              {/* Ward Select */}
+              <Form.Group>
+                <Form.Label>Phường/Xã</Form.Label>
+                <Form.Select
+                  value={selectedAddress?.wardCode || ''}
+                  onChange={(e) => setSelectedAddress(prev => ({ ...prev, wardCode: e.target.value }))}
+                  required
+                >
+                  <option value="">Chọn Phường/Xã</option>
+                  {wards.map((ward) => (
+                    <option key={ward.WardCode} value={ward.WardCode}>
+                      {ward.WardName}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </div>
+
+            {/* Address Detail */}
+            <Form.Group className="mb-4">
+              <Form.Label>Địa Chỉ Chi Tiết</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={selectedAddress?.addressDetail || ''}
+                onChange={(e) => setSelectedAddress(prev => ({ ...prev, addressDetail: e.target.value }))}
+                required
+              />
+            </Form.Group>
+
+            {/* Phone Number */}
+            <Form.Group className="mb-4">
+              <Form.Label>Số Điện Thoại</Form.Label>
+              <Form.Control
+                type="tel"
+                value={displayPhoneNumber(selectedAddress?.phoneNumber || '')}
+                onChange={(e) => {
+                  const formattedNumber = formatPhoneNumber(e.target.value);
+                  setSelectedAddress(prev => ({ ...prev, phoneNumber: formattedNumber }));
+                }}
+                required
+              />
+            </Form.Group>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2"
+              >
+                Hủy
+              </Button>
+              <Button
+                type="submit"
+                className="px-4 py-2 bg-orange-500 border-orange-500 hover:bg-orange-600"
+              >
+                Lưu Thay Đổi
+              </Button>
+            </div>
+          </Form>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };

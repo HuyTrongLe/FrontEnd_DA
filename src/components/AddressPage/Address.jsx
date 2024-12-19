@@ -6,20 +6,24 @@ import Swal from 'sweetalert2';
 import { motion, AnimatePresence } from 'framer-motion';
 import Cookies from 'js-cookie';
 import Sidebar from '../Customer/Sidebar';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { decryptData } from "../Encrypt/encryptionUtils";
 
 const Address = () => {
+  const location = useLocation();
+  const editMode = location.state?.editMode;
+  const editData = location.state?.addressData;
+  
   const userId = decryptData(Cookies.get("UserId"));
   const [address, setAddress] = useState({
-    AddressID: '',
+    AddressID: editData?.AddressID || '',
     AccountID: userId,
-    AddressStatus: 1,
-    wardCode: '',
-    districtCode: '',
-    provinceCode: '',
-    AddressDetail: '',
-    phoneNumber: '',
+    AddressStatus: editData?.AddressStatus || 1,
+    wardCode: editData?.wardCode || '',
+    districtCode: editData?.districtCode || '',
+    provinceCode: editData?.provinceCode || '',
+    AddressDetail: editData?.AddressDetail || '',
+    phoneNumber: editData?.phoneNumber || '',
   });
 
   const [provinces, setProvinces] = useState([]);
@@ -48,6 +52,15 @@ const Address = () => {
 
     fetchProvinces();
   }, []);
+
+  useEffect(() => {
+    if (editMode && editData?.provinceCode) {
+      fetchDistricts(editData.provinceCode);
+      if (editData.districtCode) {
+        fetchWards(editData.districtCode);
+      }
+    }
+  }, [editMode, editData]);
 
   useEffect(() => {
     const debounceTimeout = setTimeout(() => {
@@ -348,6 +361,15 @@ const handleSendOtp = async () => {
     });
   };
 
+  const pageTitle = editMode ? "Chỉnh Sửa Địa Chỉ" : "Thêm Địa Chỉ Mới";
+
+  useEffect(() => {
+    if (editMode && editData?.phoneNumber) {
+      setOtpVerified(true);
+      setIsPhoneAvailable(true);
+    }
+  }, [editMode, editData]);
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
       <Sidebar />
@@ -368,7 +390,7 @@ const handleSendOtp = async () => {
                 >
                   ← Quay lại
                 </Button>
-                <h2 className="text-2xl font-semibold text-gray-800">Thêm Địa Chỉ Mới</h2>
+                <h2 className="text-2xl font-semibold text-gray-800">{pageTitle}</h2>
               </div>
             </div>
             
@@ -390,16 +412,7 @@ const handleSendOtp = async () => {
                     <div className="spinner-border" role="status">
                       <span className="visually-hidden">Đang tải...</span>
                     </div>
-                  ) : isPhoneAvailable ? (
-                    <Button 
-                      variant="secondary" 
-                      onClick={handleSubmit} 
-                      disabled={!otpVerified}
-                      className="px-6 py-2 rounded-lg"
-                    >
-                      {otpVerified ? 'Lưu' : 'Xác Thực OTP Để Lưu'}
-                    </Button>
-                  ) : (
+                  ) : isPhoneAvailable ? null : (
                     <Button 
                       variant="secondary" 
                       onClick={handleSendOtp} 

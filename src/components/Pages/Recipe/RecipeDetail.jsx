@@ -53,19 +53,6 @@ const RecipeDetail = () => {
   const handleOpenModal = () => {
     setShowModal(true);
   };
-  useEffect(() => {
-    const asyncEffect = async () => {
-      await getAccountInfo();
-      await getPurchasedRecipes();
-    };
-    asyncEffect();
-  }, [accountId]);
-  useEffect(() => {
-    console.log("Updated dataAccount Coin:", dataAccount.coin);
-  }, [dataAccount]);
-  useEffect(() => {
-    console.log("Updated purchased recipes:", purchasedRecipes);
-  }, [purchasedRecipes]);
   const handleSaveRecipeRate = async () => {
     if (!accountId) { // Kiểm tra nếu chưa có accountId
       Swal.fire({
@@ -171,6 +158,8 @@ const RecipeDetail = () => {
         setAccountName(createbyName.userName);
         setImages(imagesData);
         setMainImage(imagesData[0]?.imageUrl);
+        await getAccountInfo();
+        await getPurchasedRecipes();
       } catch (err) {
         //không làm gì
       } finally {
@@ -190,7 +179,15 @@ const RecipeDetail = () => {
   const fullStars = Math.floor(roundedAverageRate);
   const halfStar = averageRate % 1 >= 0.5 ? 1 : 0;
 
-  if (loading) return <p>Đang tải dữ liệu...</p>;
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center">
+        <div className="spinner-border" role="status">
+          <span className="sr-only">Loading...</span>
+        </div>
+      </div>
+    );
+  }
   if (error) return <p>{error}</p>;
   if (!recipe) return <p>Không tải được công thức này.</p>;
   const isLongDescription = recipe.description.length > 300;
@@ -205,11 +202,7 @@ const RecipeDetail = () => {
   return (
     <section className="section-center">
       {loading === true ? (
-        <div className="d-flex justify-content-center">
-          <div className="spinner-border" role="status">
-            <span className="sr-only">Loading...</span>
-          </div>
-        </div>
+        <p>Đang tải dữ liệu...</p>
       ) : (
         <div className="max-w-6xl mx-auto p-6 bg-gray-50 shadow-md rounded-lg grid grid-cols-2 gap-8 mb-5">
           {/* Phần bên trái với lớp nền */}
@@ -287,17 +280,7 @@ const RecipeDetail = () => {
                     <div className="rating-count">({countRate} đánh giá)</div>
                   </div>
                 </div>
-                <div className="rating-bars">
-                  {[5, 4, 3, 2, 1].map((star) => (
-                    <div key={star} className="rating-bar">
-                      <span>{star} sao</span>
-                      <div className="bar">
-                        <div className="fill" style={{ width: "0%" }}></div>
-                      </div>
-                      <span>0%</span>
-                    </div>
-                  ))}
-                </div>
+
                 {showModal && (
                   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                     <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
@@ -309,7 +292,7 @@ const RecipeDetail = () => {
                           const currentRating = index + 1;
                           return (
                             <label key={index}>
-                              <input  
+                              <input
                                 type="radio"
                                 name="rating"
                                 value={currentRating}
@@ -344,7 +327,7 @@ const RecipeDetail = () => {
                               Đánh giá cuối cùng {checkRatedStatus}{" "}
                               <FaStar
                                 color="#ffc107"
-                                style={{ marginLeft: "2px", marginBottom: "1.5px", display:"inline" }}
+                                style={{ marginLeft: "2px", marginBottom: "1.5px", display: "inline" }}
                               />
                             </p>
                             <p>Đánh giá hiện tại {ratepoint}</p>
@@ -361,14 +344,14 @@ const RecipeDetail = () => {
                         <button
                           className="bg-custom-orange hover:bg-orange-500 text-white font-bold py-2 px-4 rounded"
                           onClick={() => {
-                            if(accountId){
+                            if (accountId) {
                               handleNotification(
                                 `${accountOnline} đã đánh giá ${ratepoint} sao về công thức ${recipe.recipeName} của bạn`
                               );
-                              checkRatedStatus
-                                ? handleUpdateRecipeRate()
-                                : handleSaveRecipeRate();
                             }
+                            checkRatedStatus
+                            ? handleUpdateRecipeRate()
+                            : handleSaveRecipeRate();
                           }}
                         >
                           {checkRatedStatus ? "Update Ratepoint" : "Save Ratepoint"}
@@ -379,24 +362,7 @@ const RecipeDetail = () => {
                 )}
               </div>
               <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: "10px", // Thêm khoảng cách giữa các nút
-                }}
               >
-                {/* Nút "Give your stars for this recipe" */}
-                <button
-                  className="write-review-button"
-                  style={{ width: "45%", height: "70px" }}
-                  onClick={handleOpenModal}
-                >
-                  <span role="img" aria-label="star">
-                    ✨
-                  </span>{" "}
-                  Đánh giá công thức
-                </button>
 
                 {/* Nút "Mua công thức này" chỉ hiển thị khi chưa mua */}
                 {!purchasedRecipes.has(recipe.recipeId) && (
@@ -425,20 +391,40 @@ const RecipeDetail = () => {
 
                 {/* Nút "Sửa đổi công thức" chỉ hiển thị khi đã mua */}
                 {purchasedRecipes.has(recipe.recipeId) && (
-                  <button
-                    className="write-review-button"
-                    style={{ width: "45%", height: "70px" }}
-                    onClick={() => {
-                      {
-                        handleEditRecipe(recipe.recipeId);
-                      }
-                    }}
-                  >
-                    <span role="img" aria-label="edit">
-                      ✏️
-                    </span>{" "}
-                    Sửa đổi công thức
-                  </button>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      gap: "10px", // Thêm khoảng cách giữa các nút
+                    }}>
+                    <button
+                      className="write-review-button"
+                      style={{ width: "45%", height: "70px" }}
+                      onClick={handleOpenModal}
+                    >
+                      <span role="img" aria-label="star">
+                        ✨
+                      </span>{" "}
+                      Đánh giá công thức
+                    </button>
+
+                    <button
+                      className="write-review-button"
+                      style={{ width: "45%", height: "70px" }}
+                      onClick={() => {
+                        {
+                          handleEditRecipe(recipe.recipeId);
+                        }
+                      }}
+                    >
+                      <span role="img" aria-label="edit">
+                        ✏️
+                      </span>{" "}
+                      Sửa đổi công thức
+                    </button>
+                  </div>
+
                 )}
               </div>
             </div>
@@ -545,8 +531,16 @@ const RecipeDetail = () => {
                 </li>
 
                 <li>
-                  <span className="font-semibold">Giá:</span>{" "}
-                  {recipe.price ? recipe.price + " đ" : "Miễn phí"}
+                  <span className="font-semibold">Giá:
+                    {recipe.price === 0 ? (
+                      <span className="text-green-600">Miễn Phí</span>
+                    ) : (
+                      <span className="text-red-600">
+                        {recipe.price}
+                        <img src="/images/icon/dollar.png" alt="coins" className="h-5 w-5 mb-1 ml-1 inline-block" />
+                      </span>
+                    )}
+                  </span>
                 </li>
                 <li>
                   <span className="font-semibold">Thành phần:</span>{" "}

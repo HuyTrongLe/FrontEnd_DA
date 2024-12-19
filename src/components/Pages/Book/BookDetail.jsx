@@ -552,8 +552,9 @@ const BookDetail = () => {
                                         onClick={() => {
                                             if (accountId) {
                                                 handleNotification(`${accountOnline} đã đánh giá ${ratepoint} sao về sách ${book.bookName} của bạn`);
-                                                checkRatedStatus ? handleUpdateRecipeRate() : handleSaveRecipeRate();
+                                                
                                             }
+                                            checkRatedStatus ? handleUpdateRecipeRate() : handleSaveRecipeRate();
                                         }}
                                     >
                                         {checkRatedStatus ? "Thay đổi" : "Lưu"}
