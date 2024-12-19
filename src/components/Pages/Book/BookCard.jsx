@@ -339,13 +339,13 @@ function BookCard({ book }) {
           className="top relative"
           style={{
             backgroundImage: `url(${book.images && book.images.length > 0
-                ? book.images[0].imageUrl
-                : "https://via.placeholder.com/150?text=No+Image"
+              ? book.images[0].imageUrl
+              : "https://via.placeholder.com/150?text=No+Image"
               })`,
           }}
           onClick={handleCardClick}
         >
-          <div className="absolute top-0 left-0 right-0 bottom-0 book-border z-20 rounded-none"></div>
+          <div className="absolute top-0 left-0 right-0 bottom-0 book-border z-5 rounded-none"></div>
         </div>
 
         {/* Book Info */}
@@ -373,6 +373,7 @@ function BookCard({ book }) {
           </div>
         </div>
       </div>
+
       {/* Inside Details */}
       <div className="inside">
         <div className="icon">

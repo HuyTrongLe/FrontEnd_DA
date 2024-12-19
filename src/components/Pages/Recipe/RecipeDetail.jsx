@@ -521,9 +521,12 @@ const RecipeDetail = () => {
                   <strong>Hướng dẫn</strong>
                   {recipe?.tutorial ? (
                     <div className="whitespace-pre-line">
-                      {recipe.tutorial.split("Bước ").map(
-                        (step, index) =>
-                          step && (
+                      {recipe.tutorial
+                        .split("Bước ")
+                        .filter((step, index) => step.trim() !== "")
+                        .map((step, index) => {
+                          const stepIndex = index === 0 ? 1 : index + 1;
+                          return (
                             <div key={index} className="mb-4">
                               <div className="flex items-center mb-1">
                                 <img
@@ -531,18 +534,18 @@ const RecipeDetail = () => {
                                   alt=""
                                   className="w-5 h-5 mr-2"
                                 />
-                                <strong>Bước {index}</strong>
+                                <strong>Bước {stepIndex}</strong>
                               </div>
                               <div className="ml-7">
-                                {(purchasedRecipes.has(recipe.recipeId) || recipe.price === 0) ? (
+                                {purchasedRecipes.has(recipe.recipeId) ? (
                                   <span>{step.trim()}</span>
                                 ) : (
                                   <span className="blurred">Nội dung bị ẩn</span>
                                 )}
                               </div>
                             </div>
-                          )
-                      )}
+                          );
+                        })}
                     </div>
                   ) : (
                     "N/A"

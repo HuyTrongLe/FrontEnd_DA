@@ -328,11 +328,28 @@ const ShowRecipes = () => {
                   </td>
                   <td className="px-8 py-2">{getStatusIcon(recipe.status)}</td>
                   <td className="px-4 py-8 flex space-x-2">
-                    <Link to={`/edit-recipe/${recipe.recipeId}`}>
+                  <Link
+                      to={
+                        recipe.status === 1
+                          ? "#"
+                          : `/edit-recipe/${recipe.recipeId}`
+                      }
+                    >
                       <img
                         src={EditIcon}
                         alt="Edit Icon"
                         className="w-6 h-6 mr-2"
+                        onClick={(e) => {
+                          if (recipe.status === 1) {
+                            e.preventDefault();
+                            Swal.fire({
+                              icon: "error",
+                              title: "Không thể chỉnh sửa",
+                              text: "Công thức này đã được duyệt, bạn không thể chỉnh sửa.",
+                              confirmButtonText: "OK",
+                            });
+                          }
+                        }}
                       />
                     </Link>
                     <Link to={`/recipe-seller-detail/${recipe.recipeId}`}>

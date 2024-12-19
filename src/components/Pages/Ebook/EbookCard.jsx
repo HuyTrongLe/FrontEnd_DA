@@ -65,13 +65,13 @@ const EbookCard = ({ ebook }) => {
       </h3>
       <p className="text-center text-gray-600">
         {isCreator ? (
-          <span className="text-green-600 font-medium">Đã sở hữu (Tác giả)</span>
+          <span className="text-green-600 font-medium text-lg">Đã sở hữu (Tác giả)</span>
         ) : isOwned ? (
-          <span className="text-green-600 font-medium">Đã sở hữu</span>
+          <span className="text-green-600 font-medium text-lg">Đã sở hữu</span>
         ) : ebook.price === 0 ? (
-          <span className="text-green-600 font-medium">Miễn phí</span>
+          <span className="text-green-600 font-medium text-lg">Miễn phí</span>
         ) : (
-          <span>
+          <span className='text-pink-700 font-semibold text-lg'>
             {ebook.price}
             <img src="/images/icon/dollar.png" alt="coins" className="h-5 w-5 mb-1 ml-1 inline-block" />
           </span>

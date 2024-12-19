@@ -32,11 +32,6 @@ function Ebook() {
     try {
       setLoading(true);
       
-      if (!customerId) {
-        setError("User authentication required");
-        return;
-      }
-      
       const [ebooksData] = await Promise.all([
         getEbooks(),
       ]);
@@ -46,9 +41,18 @@ function Ebook() {
         return;
       }
 
-      // Add error handling for ownership checks
+      // Modify ownership check to handle logged out state
       const ebooksWithOwnership = await Promise.all(
         ebooksData.map(async (ebook) => {
+          if (!customerId) {
+            return {
+              ...ebook,
+              isCreator: false,
+              isPurchased: false,
+              isOwned: false
+            };
+          }
+
           try {
             const isOwned = await checkEbookOwnership(customerId, ebook.ebookId);
             return {
@@ -109,12 +113,10 @@ function Ebook() {
     return filtered;
   }, [ebooks, filters]);
 
-  // Use effect with proper dependencies
+  // Modify useEffect to fetch data regardless of customerId
   useEffect(() => {
-    if (customerId) {
-      fetchEbooks();
-    }
-  }, [customerId]); // Add customerId as dependency
+    fetchEbooks();
+  }, [customerId]); // Keep customerId as dependency to re-fetch when login status changes
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);

@@ -36,7 +36,6 @@ export const leftLinks = [
   { href: "/recharge", title: "Nạp xu" },
 ];
 export const rightLinks = [
-  { href: "/#contact", title: "Liên hệ" },
   { href: "/faq", title: "FAQ" },
 ];
 
