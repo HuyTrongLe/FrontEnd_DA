@@ -328,12 +328,13 @@ const BookDetail = () => {
                     </div>
 
                     {/* Các nút */}
-                    <div className="flex gap-4 mb-4 z-10">
-                        <Button className="flex items-center justify-center bg-red-500 text-white py-2 px-4 rounded-lg w-1/2" onClick={addToCart}>
-                            <FaShoppingCart className="mr-2" /> Thêm vào giỏ hàng
-                        </Button>
-                        <Button className="flex items-center justify-center bg-green-500 text-white py-2 px-4 rounded-lg w-1/2">
-                            <FaCreditCard className="mr-2" /> Mua ngay
+                    <div className="flex justify-center mb-4 z-10">
+                        <Button 
+                            className="flex items-center justify-center bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-lg w-full transition-all duration-200 text-lg" 
+                            onClick={addToCart}
+                        >
+                            <FaShoppingCart className="mr-2 text-xl" /> 
+                            Thêm vào giỏ hàng
                         </Button>
                     </div>
 
