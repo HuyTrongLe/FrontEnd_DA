@@ -26,7 +26,7 @@ const Dashboard = () => {
       setIsLoading(true);
       
       // Fetch initial data in parallel
-      const [usersResponse, ordersResponse, withdrawResponse, recipesResponse, ebooksResponse] = 
+      const [usersResponse, ordersResponse, transactionsResponse, recipesResponse, ebooksResponse] = 
         await Promise.all([
           axios.get('https://rmrbdapi.somee.com/odata/account', {
             headers: {
@@ -48,9 +48,14 @@ const Dashboard = () => {
             return { data: [] };
           }),
           
-          getWithdraw().catch(error => {
-            console.error('Error fetching withdrawals:', error);
-            return [];
+          axios.get('https://rmrbdapi.somee.com/odata/CoinTransaction', {
+            headers: {
+              'Content-Type': 'application/json',
+              'Token': '123-abc',
+            }
+          }).catch(error => {
+            console.error('Error fetching transactions:', error);
+            return { data: [] };
           }),
           
           axios.get('https://rmrbdapi.somee.com/odata/Recipe', {
@@ -85,32 +90,21 @@ const Dashboard = () => {
         ? ordersResponse.data.filter(order => order.orderCode !== null)
         : [];
 
-      // Fetch transactions in batches of 5 users at a time
-      const batchSize = 5;
-      const recentTransactions = [];
+      // Process transactions
+      const allTransactions = Array.isArray(transactionsResponse.data) ? transactionsResponse.data : [];
       
-      for (let i = 0; i < activeUsers.length; i += batchSize) {
-        const userBatch = activeUsers.slice(i, i + batchSize);
-        const batchPromises = userBatch.map(user => 
-          getCoinTransactionByAccountId(user.accountId)
-            .catch(error => {
-              console.error(`Error fetching transactions for user ${user.accountId}:`, error);
-              return [];
-            })
-        );
-        
-        const batchResults = await Promise.all(batchPromises);
-        batchResults.forEach(transactions => {
-          if (Array.isArray(transactions)) {
-            recentTransactions.push(...transactions);
-          }
-        });
-      }
-
-      // Sort and limit transactions
-      const sortedTransactions = recentTransactions
+      // Sort transactions by date in descending order and take the 7 most recent
+      const recentTransactions = allTransactions
         .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 5);
+        .slice(0, 7)
+        .map(transaction => ({
+          orderId: transaction.coinTransactionId,
+          customerId: transaction.customerId,
+          customerName: userMap.get(transaction.customerId) || 'Unknown',
+          totalAmount: transaction.coinFluctuations,
+          status: transaction.status,
+          orderDate: new Date(transaction.date).toLocaleDateString()
+        }));
 
       // Process monthly data
       const monthlyData = validOrders.reduce((acc, order) => {
@@ -138,14 +132,7 @@ const Dashboard = () => {
         totalOrders: validOrders.length,
         totalEbooks: Array.isArray(ebooksResponse.data) ? ebooksResponse.data.length : 0,
         totalRecipes: Array.isArray(recipesResponse.data) ? recipesResponse.data.length : 0,
-        recentTransactions: sortedTransactions.map(transaction => ({
-          orderId: transaction.coinTransactionId,
-          customerId: transaction.customerId,
-          customerName: userMap.get(transaction.customerId) || 'Unknown',
-          totalAmount: Math.abs(transaction.coinFluctuations),
-          status: transaction.status,
-          orderDate: new Date(transaction.date).toLocaleDateString()
-        }))
+        recentTransactions
       });
 
       setSalesData(Object.values(monthlyData));

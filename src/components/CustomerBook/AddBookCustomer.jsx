@@ -495,7 +495,7 @@ const AddBook = () => {
                 title: 'Tải lên thất bại',
                 text: 'Không thể tải lên bất kỳ hình ảnh nào'
               });
-              // Tùy chọn xử lý trường hợp kh��ng có hình ảnh nào được tải ln
+              // Tùy chọn xử lý trường hợp khng có hình ảnh nào được tải ln
             }
 
           } catch (uploadError) {
@@ -752,179 +752,156 @@ const AddBook = () => {
   );
 
   return (
-    <div 
-    >
+    <div className="min-h-screen py-8">
       <Container className="my-8 px-4 max-w-4xl mx-auto relative overflow-hidden">
-        <AnimatePresence mode="wait">
-          {isBookFormVisible ? (
-            <motion.div
-              key="bookForm"
-              initial={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: "-100%" }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6"
-            >
-              <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">
-                Thêm Sách Mới
-              </h2>
+        <motion.div
+          initial={{ opacity: 0, x: "-100%" }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
+          className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center">
+              <Button
+                onClick={() => navigate('/book-list-customer')}
+                className="mr-4 text-orange-500 hover:text-orange-600 bg-transparent border border-orange-500 hover:border-orange-600 px-4 py-2 rounded-lg transition-colors"
+              >
+                ← Quay lại
+              </Button>
+              <h2 className="text-2xl font-semibold text-gray-800">Thêm Sách Mới</h2>
+            </div>
+          </div>
+          
+          <AnimatePresence mode="wait">
+            {isBookFormVisible ? (
+              <motion.div
+                key="bookForm"
+                initial={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: "-100%" }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6"
+              >
+                <Form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Phần Tên Sách & Tác Giả với floating labels */}
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="relative">
+                      <Form.Control
+                        type="text"
+                        id="bookName"
+                        value={book.bookName || ''}
+                        onChange={(e) => setBook(prev => ({
+                          ...prev,
+                          bookName: e.target.value
+                        }))}
+                        required
+                        className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
+                                  focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
+                                  transition-all duration-200 outline-none
+                                  placeholder-transparent"
+                        placeholder="Tên Sách"
+                      />
+                      <Form.Label
+                        htmlFor="bookName"
+                        className="absolute left-3 -top-2.5 text-gray-600 text-sm 
+                                  bg-white px-2 pointer-events-none
+                                  transition-all duration-200
+                                  peer-placeholder-shown:text-base
+                                  peer-placeholder-shown:text-gray-500
+                                  peer-placeholder-shown:top-3.5
+                                  peer-placeholder-shown:left-4
+                                  peer-focus:-top-2.5
+                                  peer-focus:text-sm
+                                  peer-focus:text-gray-600"
+                      >
+                        Tên Sách
+                      </Form.Label>
+                    </div>
 
-              <Form onSubmit={handleSubmit} className="space-y-4">
-                {/* Phần Tên Sách & Tác Giả với floating labels */}
-                <div className="grid md:grid-cols-2 gap-6">
+                    <div className="relative">
+                      <Form.Control
+                        type="text"
+                        id="author"
+                        value={book.author || ''}
+                        onChange={(e) => setBook(prev => ({
+                          ...prev,
+                          author: e.target.value
+                        }))}
+                        required
+                        className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
+                                  focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
+                                  transition-all duration-200 outline-none
+                                  placeholder-transparent"
+                        placeholder="Tên Tác Giả"
+                      />
+                      <Form.Label
+                        htmlFor="author"
+                        className="absolute left-3 -top-2.5 text-gray-600 text-sm 
+                                  bg-white px-2 pointer-events-none
+                                  transition-all duration-200
+                                  peer-placeholder-shown:text-base
+                                  peer-placeholder-shown:text-gray-500
+                                  peer-placeholder-shown:top-3.5
+                                  peer-placeholder-shown:left-4
+                                  peer-focus:-top-2.5
+                                  peer-focus:text-sm
+                                  peer-focus:text-gray-600"
+                      >
+                        Tên Tác Giả
+                      </Form.Label>
+                    </div>
+                  </div>
+
+                  {/* Lựa Chọn Danh Mục */}
                   <div className="relative">
-                    <Form.Control
-                      type="text"
-                      id="bookName"
-                      value={book.bookName || ''}
+                    <Form.Select
+                      id="categoryId"
+                      name="categoryId"
+                      value={book.categoryId || ''}
                       onChange={(e) => setBook(prev => ({
                         ...prev,
-                        bookName: e.target.value
+                        categoryId: e.target.value
                       }))}
                       required
                       className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
-                                focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
+                                focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
                                 transition-all duration-200 outline-none
-                                placeholder-transparent"
-                      placeholder="Tên Sách"
-                    />
-                    <Form.Label
-                      htmlFor="bookName"
-                      className="absolute left-3 -top-2.5 text-gray-600 text-sm 
-                                bg-white px-2 pointer-events-none
-                                transition-all duration-200
-                                peer-placeholder-shown:text-base
-                                peer-placeholder-shown:text-gray-500
-                                peer-placeholder-shown:top-3.5
-                                peer-placeholder-shown:left-4
-                                peer-focus:-top-2.5
-                                peer-focus:text-sm
-                                peer-focus:text-gray-600"
+                                appearance-none"
                     >
-                      Tên Sách
+                      <option value="">Chọn Danh Mục</option>
+                      {categories.map((category) => (
+                        <option key={category.categoryId} value={category.categoryId}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                    <Form.Label
+                      className="absolute left-3 -top-2.5 text-gray-600 text-sm 
+                                bg-white px-2"
+                    >
+                      Danh Mục
                     </Form.Label>
                   </div>
 
+                  {/* Mô Tả */}
                   <div className="relative">
                     <Form.Control
-                      type="text"
-                      id="author"
-                      value={book.author || ''}
+                      as="textarea"
+                      id="description"
+                      name="description"
+                      value={book.description || ''}
                       onChange={(e) => setBook(prev => ({
                         ...prev,
-                        author: e.target.value
-                      }))}
-                      required
-                      className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
-                                focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
-                                transition-all duration-200 outline-none
-                                placeholder-transparent"
-                      placeholder="Tên Tác Giả"
-                    />
-                    <Form.Label
-                      htmlFor="author"
-                      className="absolute left-3 -top-2.5 text-gray-600 text-sm 
-                                bg-white px-2 pointer-events-none
-                                transition-all duration-200
-                                peer-placeholder-shown:text-base
-                                peer-placeholder-shown:text-gray-500
-                                peer-placeholder-shown:top-3.5
-                                peer-placeholder-shown:left-4
-                                peer-focus:-top-2.5
-                                peer-focus:text-sm
-                                peer-focus:text-gray-600"
-                    >
-                      Tên Tác Giả
-                    </Form.Label>
-                  </div>
-                </div>
-
-                {/* Lựa Chọn Danh Mục */}
-                <div className="relative">
-                  <Form.Select
-                    id="categoryId"
-                    name="categoryId"
-                    value={book.categoryId || ''}
-                    onChange={(e) => setBook(prev => ({
-                      ...prev,
-                      categoryId: e.target.value
-                    }))}
-                    required
-                    className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
-                              focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                              transition-all duration-200 outline-none
-                              appearance-none"
-                  >
-                    <option value="">Chọn Danh Mục</option>
-                    {categories.map((category) => (
-                      <option key={category.categoryId} value={category.categoryId}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                  <Form.Label
-                    className="absolute left-3 -top-2.5 text-gray-600 text-sm 
-                              bg-white px-2"
-                  >
-                    Danh Mục
-                  </Form.Label>
-                </div>
-
-                {/* Mô Tả */}
-                <div className="relative">
-                  <Form.Control
-                    as="textarea"
-                    id="description"
-                    name="description"
-                    value={book.description || ''}
-                    onChange={(e) => setBook(prev => ({
-                      ...prev,
-                      description: e.target.value
-                    }))}
-                    required
-                    className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
-                              focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                              transition-all duration-200 outline-none
-                              placeholder-transparent"
-                    placeholder="Mô Tả"
-                  />
-                  <Form.Label
-                    htmlFor="description"
-                    className="absolute left-3 -top-2.5 text-gray-600 text-sm 
-                              transition-all duration-200 
-                              peer-placeholder-shown:text-base 
-                              peer-placeholder-shown:text-gray-400
-                              peer-placeholder-shown:top-3.5
-                              peer-focus:-top-2.5 
-                              peer-focus:text-sm
-                              peer-focus:text-gray-600
-                              bg-white px-2
-                              pointer-events-none"
-                  >
-                    Mô Tả
-                  </Form.Label>
-                </div>
-
-                {/* Phần Giá & Kho */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="relative">
-                    <Form.Control
-                      type="text"
-                      id="price"
-                      name="price"
-                      value={book.price || ''}
-                      onChange={(e) => setBook(prev => ({
-                        ...prev,
-                        price: e.target.value
+                        description: e.target.value
                       }))}
                       required
                       className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
                                 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
                                 transition-all duration-200 outline-none
                                 placeholder-transparent"
-                      placeholder="Giá"
+                      placeholder="Mô Tả"
                     />
                     <Form.Label
-                      htmlFor="price"
+                      htmlFor="description"
                       className="absolute left-3 -top-2.5 text-gray-600 text-sm 
                                 transition-all duration-200 
                                 peer-placeholder-shown:text-base 
@@ -936,357 +913,394 @@ const AddBook = () => {
                                 bg-white px-2
                                 pointer-events-none"
                     >
-                      Giá (VND)
+                      Mô Tả
                     </Form.Label>
                   </div>
 
-                  <div className="relative">
-                    <Form.Control
-                      type="number"
-                      id="unitInStock"
-                      name="unitInStock"
-                      value={book.unitInStock || '1'}
-                      onChange={(e) => setBook(prev => ({
-                        ...prev,
-                        unitInStock: e.target.value
-                      }))}
-                      required
-                      min="1"
-                      className={`${numberInputClass} peer`}
-                      placeholder="Số Lượng Trong Kho"
-                    />
-                    <Form.Label
-                      htmlFor="unitInStock"
-                      className="absolute left-3 -top-2.5 text-gray-600 text-sm 
-                                transition-all duration-200 
-                                peer-placeholder-shown:text-base 
-                                peer-placeholder-shown:text-gray-400
-                                peer-placeholder-shown:top-3.5
-                                peer-focus:-top-2.5 
-                                peer-focus:text-sm
-                                peer-focus:text-gray-600
-                                bg-white px-2
-                                pointer-events-none"
-                    >
-                      Số Lượng Trong Kho
-                    </Form.Label>
-                  </div>
-                </div>
-
-                {/* Phần Kích Thước */}
-                <div className="grid md:grid-cols-4 gap-4">
-                  <div className="relative">
-                    <Form.Control
-                      type="number"
-                      id="weight"
-                      value={book.weight || ''}
-                      onChange={(e) => setBook(prev => ({
-                        ...prev,
-                        weight: e.target.value
-                      }))}
-                      required
-                      className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
-                                focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
-                                transition-all duration-200 outline-none
-                                placeholder-transparent
-                                [appearance:textfield]
-                                [&::-webkit-outer-spin-button]:appearance-none
-                                [&::-webkit-inner-spin-button]:appearance-none"
-                      placeholder="Cân nặng (g)"
-                    />
-                    <Form.Label
-                      htmlFor="weight"
-                      className="absolute left-3 -top-2.5 text-gray-600 text-sm 
-                                bg-white px-2 pointer-events-none
-                                transition-all duration-200
-                                peer-placeholder-shown:text-base
-                                peer-placeholder-shown:text-gray-500
-                                peer-placeholder-shown:top-3.5
-                                peer-placeholder-shown:left-4
-                                peer-focus:-top-2.5
-                                peer-focus:text-sm
-                                peer-focus:text-gray-600"
-                    >
-                      Cân nặng (g)
-                    </Form.Label>
-                  </div>
-
-                  <div className="relative">
-                    <Form.Control
-                      type="number"
-                      id="length"
-                      value={book.length || ''}
-                      onChange={(e) => setBook(prev => ({
-                        ...prev,
-                        length: e.target.value
-                      }))}
-                      required
-                      className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
-                                focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
-                                transition-all duration-200 outline-none
-                                placeholder-transparent
-                                [appearance:textfield]
-                                [&::-webkit-outer-spin-button]:appearance-none
-                                [&::-webkit-inner-spin-button]:appearance-none"
-                      placeholder="Chiều dài (cm)"
-                    />
-                    <Form.Label
-                      htmlFor="length"
-                      className="absolute left-3 -top-2.5 text-gray-600 text-sm 
-                                bg-white px-2 pointer-events-none
-                                transition-all duration-200
-                                peer-placeholder-shown:text-base
-                                peer-placeholder-shown:text-gray-500
-                                peer-placeholder-shown:top-3.5
-                                peer-placeholder-shown:left-4
-                                peer-focus:-top-2.5
-                                peer-focus:text-sm
-                                peer-focus:text-gray-600"
-                    >
-                      Chiều dài (cm)
-                    </Form.Label>
-                  </div>
-
-                  <div className="relative">
-                    <Form.Control
-                      type="number"
-                      id="width"
-                      value={book.width || ''}
-                      onChange={(e) => setBook(prev => ({
-                        ...prev,
-                        width: e.target.value
-                      }))}
-                      required
-                      className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
-                                focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
-                                transition-all duration-200 outline-none
-                                placeholder-transparent
-                                [appearance:textfield]
-                                [&::-webkit-outer-spin-button]:appearance-none
-                                [&::-webkit-inner-spin-button]:appearance-none"
-                      placeholder="Chiều rộng (cm)"
-                    />
-                    <Form.Label
-                      htmlFor="width"
-                      className="absolute left-3 -top-2.5 text-gray-600 text-sm 
-                                bg-white px-2 pointer-events-none
-                                transition-all duration-200
-                                peer-placeholder-shown:text-base
-                                peer-placeholder-shown:text-gray-500
-                                peer-placeholder-shown:top-3.5
-                                peer-placeholder-shown:left-4
-                                peer-focus:-top-2.5
-                                peer-focus:text-sm
-                                peer-focus:text-gray-600"
-                    >
-                      Chiều rộng (cm)
-                    </Form.Label>
-                  </div>
-
-                  <div className="relative">
-                    <Form.Control
-                      type="number"
-                      id="height"
-                      value={book.height || ''}
-                      onChange={(e) => setBook(prev => ({
-                        ...prev,
-                        height: e.target.value
-                      }))}
-                      required
-                      className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
-                                focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
-                                transition-all duration-200 outline-none
-                                placeholder-transparent
-                                [appearance:textfield]
-                                [&::-webkit-outer-spin-button]:appearance-none
-                                [&::-webkit-inner-spin-button]:appearance-none"
-                      placeholder="Chiều cao (cm)"
-                    />
-                    <Form.Label
-                      htmlFor="height"
-                      className="absolute left-3 -top-2.5 text-gray-600 text-sm 
-                                bg-white px-2 pointer-events-none
-                                transition-all duration-200
-                                peer-placeholder-shown:text-base
-                                peer-placeholder-shown:text-gray-500
-                                peer-placeholder-shown:top-3.5
-                                peer-placeholder-shown:left-4
-                                peer-focus:-top-2.5
-                                peer-focus:text-sm
-                                peer-focus:text-gray-600"
-                    >
-                      Chiều cao (cm)
-                    </Form.Label>
-                  </div>
-                </div>
-
-                {/* Trường ISBN */}
-                <div className="relative">
-                  <Form.Control
-                    type="text"
-                    id="isbn"
-                    name="isbn"
-                    value={book.isbn || ''}
-                    onChange={(e) => setBook(prev => ({
-                      ...prev,
-                      isbn: e.target.value
-                    }))}
-                    required
-                    className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
-                              focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                              transition-all duration-200 outline-none
-                              placeholder-transparent"
-                    placeholder="ISBN"
-                  />
-                  <Form.Label
-                    htmlFor="isbn"
-                    className="absolute left-3 -top-2.5 text-gray-600 text-sm 
-                              transition-all duration-200 
-                              peer-placeholder-shown:text-base 
-                              peer-placeholder-shown:text-gray-400
-                              peer-placeholder-shown:top-3.5
-                              peer-focus:-top-2.5 
-                              peer-focus:text-sm
-                              peer-focus:text-gray-600
-                              bg-white px-2
-                              pointer-events-none"
-                  >
-                    ISBN
-                  </Form.Label>
-                </div>
-
-                {/* Address Selection Section */}
-                {renderAddressButton()}
-
-                {/* Nút Gửi */}
-                <div className="flex justify-end mt-6">
-                  <Button
-                    type="submit"
-                    className="bg-orange-500 hover:bg-orange-600 text-white font-semibold 
-                              px-6 py-2 rounded-lg transition-all duration-200 
-                              transform hover:-translate-y-0.5"
-                  >
-                    Lưu Sách
-                  </Button>
-                </div>
-              </Form>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="imageUpload"
-              initial={{ opacity: 0, x: "100%" }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6"
-            >
-              <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">
-                Tải Lên Hình Ảnh Sách
-              </h2>
-              
-              <div className="space-y-6">
-                <div className="w-full p-12 border-2 border-dashed border-gray-300 rounded-lg 
-                              hover:border-blue-500 transition-colors duration-200
-                              min-h-[300px] flex items-center justify-center">
-                  <div {...getRootProps()} className="text-center w-full">
-                    <input {...getInputProps()} />
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="space-y-4"
-                    >
-                      <div className="flex justify-center">
-                        <svg 
-                          className="w-16 h-16 text-gray-400" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth="2" 
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                          />
-                        </svg>
-                      </div>
-                      <p className="text-gray-600 text-lg">
-                        Kéo và thả hình ảnh vào đây
-                      </p>
-                      <p className="text-gray-400">
-                        hoặc nhấp để chọn tệp
-                      </p>
-                    </motion.div>
-                  </div>
-                </div>
-
-                {previewImages.length > 0 && (
-                  <motion.div 
-                    className="grid grid-cols-3 gap-4 mt-6"
-                    layout
-                  >
-                    {previewImages.map((image, index) => (
-                      <motion.div
-                        key={image.url}
-                        layout
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="relative group aspect-square bg-gray-100 rounded-lg"
+                  {/* Phần Giá & Kho */}
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="relative">
+                      <Form.Control
+                        type="text"
+                        id="price"
+                        name="price"
+                        value={book.price || ''}
+                        onChange={(e) => setBook(prev => ({
+                          ...prev,
+                          price: e.target.value
+                        }))}
+                        required
+                        className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
+                                  focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
+                                  transition-all duration-200 outline-none
+                                  placeholder-transparent"
+                        placeholder="Giá"
+                      />
+                      <Form.Label
+                        htmlFor="price"
+                        className="absolute left-3 -top-2.5 text-gray-600 text-sm 
+                                  transition-all duration-200 
+                                  peer-placeholder-shown:text-base 
+                                  peer-placeholder-shown:text-gray-400
+                                  peer-placeholder-shown:top-3.5
+                                  peer-focus:-top-2.5 
+                                  peer-focus:text-sm
+                                  peer-focus:text-gray-600
+                                  bg-white px-2
+                                  pointer-events-none"
                       >
-                        <img
-                          src={image.url}
-                          alt={image.name || `Hình ảnh ${index + 1}`}
-                          className="w-full h-full object-cover rounded-lg"
-                          loading="lazy"
-                        />
-                        <motion.button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute -top-3 -right-3 w-7 h-7 
-                                   bg-red-500 hover:bg-red-600
-                                   text-white text-lg font-bold
-                                   rounded-full flex items-center justify-center
-                                   shadow-lg transform hover:scale-110
-                                   transition-all duration-200
-                                   cursor-pointer
-                                   z-50"
-                          aria-label={`Xóa ${image.name || `hình ảnh ${index + 1}`}`}
-                        >
-                          ×
-                        </motion.button>
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 
-                                      transition-opacity duration-200 rounded-lg">
-                          <div className="absolute bottom-2 left-2 right-2 text-white text-sm truncate px-2">
-                            {image.name || `Hình ảnh ${index + 1}`}
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                )}
-              </div>
+                        Giá (VND)
+                      </Form.Label>
+                    </div>
 
-              <div className="mt-6 flex justify-end space-x-4">
-                <Button
-                  variant="secondary"
-                  onClick={handleBack}
-                  className="px-6 py-2"
-                >
-                  Quay Lại
-                </Button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleImageUpload}
-                  className="px-6 py-2 bg-blue-500 text-white rounded-lg"
-                >
-                  Tải Lên Hình Ảnh
-                </motion.button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                    <div className="relative">
+                      <Form.Control
+                        type="number"
+                        id="unitInStock"
+                        name="unitInStock"
+                        value={book.unitInStock || '1'}
+                        onChange={(e) => setBook(prev => ({
+                          ...prev,
+                          unitInStock: e.target.value
+                        }))}
+                        required
+                        min="1"
+                        className={`${numberInputClass} peer`}
+                        placeholder="Số Lượng Trong Kho"
+                      />
+                      <Form.Label
+                        htmlFor="unitInStock"
+                        className="absolute left-3 -top-2.5 text-gray-600 text-sm 
+                                  transition-all duration-200 
+                                  peer-placeholder-shown:text-base 
+                                  peer-placeholder-shown:text-gray-400
+                                  peer-placeholder-shown:top-3.5
+                                  peer-focus:-top-2.5 
+                                  peer-focus:text-sm
+                                  peer-focus:text-gray-600
+                                  bg-white px-2
+                                  pointer-events-none"
+                      >
+                        Số Lượng Trong Kho
+                      </Form.Label>
+                    </div>
+                  </div>
+
+                  {/* Phần Kích Thước */}
+                  <div className="grid md:grid-cols-4 gap-4">
+                    <div className="relative">
+                      <Form.Control
+                        type="number"
+                        id="weight"
+                        value={book.weight || ''}
+                        onChange={(e) => setBook(prev => ({
+                          ...prev,
+                          weight: e.target.value
+                        }))}
+                        required
+                        className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
+                                  focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
+                                  transition-all duration-200 outline-none
+                                  placeholder-transparent
+                                  [appearance:textfield]
+                                  [&::-webkit-outer-spin-button]:appearance-none
+                                  [&::-webkit-inner-spin-button]:appearance-none"
+                        placeholder="Cân nặng (g)"
+                      />
+                      <Form.Label
+                        htmlFor="weight"
+                        className="absolute left-3 -top-2.5 text-gray-600 text-sm 
+                                  bg-white px-2 pointer-events-none
+                                  transition-all duration-200
+                                  peer-placeholder-shown:text-base
+                                  peer-placeholder-shown:text-gray-500
+                                  peer-placeholder-shown:top-3.5
+                                  peer-placeholder-shown:left-4
+                                  peer-focus:-top-2.5
+                                  peer-focus:text-sm
+                                  peer-focus:text-gray-600"
+                      >
+                        Cân nặng (g)
+                      </Form.Label>
+                    </div>
+
+                    <div className="relative">
+                      <Form.Control
+                        type="number"
+                        id="length"
+                        value={book.length || ''}
+                        onChange={(e) => setBook(prev => ({
+                          ...prev,
+                          length: e.target.value
+                        }))}
+                        required
+                        className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
+                                  focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
+                                  transition-all duration-200 outline-none
+                                  placeholder-transparent
+                                  [appearance:textfield]
+                                  [&::-webkit-outer-spin-button]:appearance-none
+                                  [&::-webkit-inner-spin-button]:appearance-none"
+                        placeholder="Chiều dài (cm)"
+                      />
+                      <Form.Label
+                        htmlFor="length"
+                        className="absolute left-3 -top-2.5 text-gray-600 text-sm 
+                                  bg-white px-2 pointer-events-none
+                                  transition-all duration-200
+                                  peer-placeholder-shown:text-base
+                                  peer-placeholder-shown:text-gray-500
+                                  peer-placeholder-shown:top-3.5
+                                  peer-placeholder-shown:left-4
+                                  peer-focus:-top-2.5
+                                  peer-focus:text-sm
+                                  peer-focus:text-gray-600"
+                      >
+                        Chiều dài (cm)
+                      </Form.Label>
+                    </div>
+
+                    <div className="relative">
+                      <Form.Control
+                        type="number"
+                        id="width"
+                        value={book.width || ''}
+                        onChange={(e) => setBook(prev => ({
+                          ...prev,
+                          width: e.target.value
+                        }))}
+                        required
+                        className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
+                                  focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
+                                  transition-all duration-200 outline-none
+                                  placeholder-transparent
+                                  [appearance:textfield]
+                                  [&::-webkit-outer-spin-button]:appearance-none
+                                  [&::-webkit-inner-spin-button]:appearance-none"
+                        placeholder="Chiều rộng (cm)"
+                      />
+                      <Form.Label
+                        htmlFor="width"
+                        className="absolute left-3 -top-2.5 text-gray-600 text-sm 
+                                  bg-white px-2 pointer-events-none
+                                  transition-all duration-200
+                                  peer-placeholder-shown:text-base
+                                  peer-placeholder-shown:text-gray-500
+                                  peer-placeholder-shown:top-3.5
+                                  peer-placeholder-shown:left-4
+                                  peer-focus:-top-2.5
+                                  peer-focus:text-sm
+                                  peer-focus:text-gray-600"
+                      >
+                        Chiều rộng (cm)
+                      </Form.Label>
+                    </div>
+
+                    <div className="relative">
+                      <Form.Control
+                        type="number"
+                        id="height"
+                        value={book.height || ''}
+                        onChange={(e) => setBook(prev => ({
+                          ...prev,
+                          height: e.target.value
+                        }))}
+                        required
+                        className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
+                                  focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
+                                  transition-all duration-200 outline-none
+                                  placeholder-transparent
+                                  [appearance:textfield]
+                                  [&::-webkit-outer-spin-button]:appearance-none
+                                  [&::-webkit-inner-spin-button]:appearance-none"
+                        placeholder="Chiều cao (cm)"
+                      />
+                      <Form.Label
+                        htmlFor="height"
+                        className="absolute left-3 -top-2.5 text-gray-600 text-sm 
+                                  bg-white px-2 pointer-events-none
+                                  transition-all duration-200
+                                  peer-placeholder-shown:text-base
+                                  peer-placeholder-shown:text-gray-500
+                                  peer-placeholder-shown:top-3.5
+                                  peer-placeholder-shown:left-4
+                                  peer-focus:-top-2.5
+                                  peer-focus:text-sm
+                                  peer-focus:text-gray-600"
+                      >
+                        Chiều cao (cm)
+                      </Form.Label>
+                    </div>
+                  </div>
+
+                  {/* Trường ISBN */}
+                  <div className="relative">
+                    <Form.Control
+                      type="text"
+                      id="isbn"
+                      name="isbn"
+                      value={book.isbn || ''}
+                      onChange={(e) => setBook(prev => ({
+                        ...prev,
+                        isbn: e.target.value
+                      }))}
+                      required
+                      className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
+                                focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
+                                transition-all duration-200 outline-none
+                                placeholder-transparent"
+                      placeholder="ISBN"
+                    />
+                    <Form.Label
+                      htmlFor="isbn"
+                      className="absolute left-3 -top-2.5 text-gray-600 text-sm 
+                                transition-all duration-200 
+                                peer-placeholder-shown:text-base 
+                                peer-placeholder-shown:text-gray-400
+                                peer-placeholder-shown:top-3.5
+                                peer-focus:-top-2.5 
+                                peer-focus:text-sm
+                                peer-focus:text-gray-600
+                                bg-white px-2
+                                pointer-events-none"
+                    >
+                      ISBN
+                    </Form.Label>
+                  </div>
+
+                  {/* Address Selection Section */}
+                  {renderAddressButton()}
+
+                  {/* Nút Gửi */}
+                  <div className="flex justify-end mt-6">
+                    <Button
+                      type="submit"
+                      className="bg-orange-500 hover:bg-orange-600 text-white font-semibold 
+                                px-6 py-2 rounded-lg transition-all duration-200 
+                                transform hover:-translate-y-0.5"
+                    >
+                      Lưu Sách
+                    </Button>
+                  </div>
+                </Form>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="imageUpload"
+                initial={{ opacity: 0, x: "100%" }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6"
+              >
+                <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">
+                  Tải Lên Hình Ảnh Sách
+                </h2>
+                
+                <div className="space-y-6">
+                  <div className="w-full p-12 border-2 border-dashed border-gray-300 rounded-lg 
+                                hover:border-blue-500 transition-colors duration-200
+                                min-h-[300px] flex items-center justify-center">
+                    <div {...getRootProps()} className="text-center w-full">
+                      <input {...getInputProps()} />
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-4"
+                      >
+                        <div className="flex justify-center">
+                          <svg 
+                            className="w-16 h-16 text-gray-400" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                              strokeWidth="2" 
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                            />
+                          </svg>
+                        </div>
+                        <p className="text-gray-600 text-lg">
+                          Kéo và thả hình ảnh vào đây
+                        </p>
+                        <p className="text-gray-400">
+                          hoặc nhấp để chọn tệp
+                        </p>
+                      </motion.div>
+                    </div>
+                  </div>
+
+                  {previewImages.length > 0 && (
+                    <motion.div 
+                      className="grid grid-cols-3 gap-4 mt-6"
+                      layout
+                    >
+                      {previewImages.map((image, index) => (
+                        <motion.div
+                          key={image.url}
+                          layout
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="relative group aspect-square bg-gray-100 rounded-lg"
+                        >
+                          <img
+                            src={image.url}
+                            alt={image.name || `Hình ảnh ${index + 1}`}
+                            className="w-full h-full object-cover rounded-lg"
+                            loading="lazy"
+                          />
+                          <motion.button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute -top-3 -right-3 w-7 h-7 
+                                     bg-red-500 hover:bg-red-600
+                                     text-white text-lg font-bold
+                                     rounded-full flex items-center justify-center
+                                     shadow-lg transform hover:scale-110
+                                     transition-all duration-200
+                                     cursor-pointer
+                                     z-50"
+                            aria-label={`Xóa ${image.name || `hình ảnh ${index + 1}`}`}
+                          >
+                            ×
+                          </motion.button>
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 
+                                        transition-opacity duration-200 rounded-lg">
+                            <div className="absolute bottom-2 left-2 right-2 text-white text-sm truncate px-2">
+                              {image.name || `Hình ảnh ${index + 1}`}
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )}
+                </div>
+
+                <div className="mt-6 flex justify-end space-x-4">
+                  <Button
+                    variant="secondary"
+                    onClick={handleBack}
+                    className="px-6 py-2"
+                  >
+                    Quay Lại
+                  </Button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleImageUpload}
+                    className="px-6 py-2 bg-blue-500 text-white rounded-lg"
+                  >
+                    Tải Lên Hình Ảnh
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </Container>
 
       {/* Address Modal */}

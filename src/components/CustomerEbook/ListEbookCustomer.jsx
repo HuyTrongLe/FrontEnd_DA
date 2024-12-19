@@ -398,7 +398,7 @@ const EditEbookCustomer = () => {
                                 <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                   <path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0015.414 4L13 1.586A2 2 0 0011.586 1H9a2 2 0 00-2 2z" />
                                 </svg>
-                                View PDF
+                                Xem PDF
                               </a>
                             ) : (
                               <span className="text-red-500 text-sm">Not available</span>

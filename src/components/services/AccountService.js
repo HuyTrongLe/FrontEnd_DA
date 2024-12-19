@@ -18,7 +18,12 @@ export const getAccountById = async (accountId) => {
   const maxAttempts = 3;
   while (attempts < maxAttempts) {
     try {
-      const response = await apiInstance.get(`/Account/${accountId}`);
+      const response = await axios.get(`https://rmrbdapi.somee.com/odata/Account/${accountId}`,{
+        headers: {
+            token: '123-abc'
+        }
+    });
+      //const response = await apiInstance.get(`/Account/${accountId}`);
       return response.data;
     } catch (error) {
       attempts++;

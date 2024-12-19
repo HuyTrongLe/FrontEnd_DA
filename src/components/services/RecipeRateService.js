@@ -16,7 +16,7 @@ export const getRecipeRates = async () => {
         throw error;
     }
 };
-export const saveRecipeRate = async (recipeId,accountId, ratepoint) => {
+export const saveRecipeRate = async (recipeId, accountId, ratepoint) => {
     const urlRecipeRate = "https://rmrbdapi.somee.com/odata/RecipeRate";
     const RecipeRateData = {
         recipeId,
@@ -42,7 +42,7 @@ export const saveRecipeRate = async (recipeId,accountId, ratepoint) => {
 export const getRecipeRatePoint = async (recipeId) => {
     try {
         // Gọi API với URL mới `/RecipeRate/{recipeId}`
-        const response = await axios.get(`https://rmrbdapi.somee.com/odata/RecipeRate?$apply=filter(RecipeID eq ${recipeId})/aggregate(RATEPOINT with average as AvgRatePoint)`, {
+        const response = await axios.get(`https://rmrbdapi.somee.com/odata/RecipeRate?$apply=filter(recipeId eq ${recipeId})/aggregate(ratePoint with average as AvgRatePoint)`, {
             headers: {
                 token: '123-abc'
             }
@@ -60,7 +60,7 @@ export const getCountRecipeRateByRecipeId = async (recipeId) => {
         console.error('Invalid recipeId:', recipeId);
         return 0;
     }
-    const apiUrl = `https://rmrbdapi.somee.com/odata/RecipeRate?$filter=RecipeID eq ${recipeId}`;
+    const apiUrl = `https://rmrbdapi.somee.com/odata/RecipeRate?$filter=recipeId eq ${recipeId}`;
     const headers = { token: '123-abc' };
     let attempts = 0;
     const maxAttempts = 3;
@@ -85,51 +85,56 @@ export const getCountRecipeRateByRecipeId = async (recipeId) => {
 };
 
 // API cập nhật công thưc dựa theo Recipeid và AccountId
-export const updateRecipeRate = async (recipeId, accountId,ratePoint) => {
+export const updateRecipeRate = async (recipeId, accountId, ratePoint) => {
     const urlRecipeRate = `https://rmrbdapi.somee.com/odata/RecipeRate/${recipeId}/${accountId}`;
     const RecipeRateData = {
         recipeId,
         accountId,
         ratePoint,
     };
-    try {
-        const response = await axios.put(urlRecipeRate,RecipeRateData,{
-            headers: {
-                token: '123-abc'
+    let attempts = 0;
+    const maxAttempts = 3;
+    while (attempts < maxAttempts) {
+        try {
+            const response = await axios.put(urlRecipeRate, RecipeRateData, {
+                headers: {
+                    token: '123-abc'
+                }
+            });
+            return response.data;
+        } catch (error) {
+            attempts++;
+            if (attempts === maxAttempts) {
+                console.error(`Error updating ratepoint with Recipeid ${recipeId} and AccountId ${accountId}:`, error);
+                throw error;
             }
-        });
-        return response.data;
-    } catch (error) {
-        console.error(`Error updating ratepoint with Recipeid ${recipeId} and AccountId ${accountId}:`, error);
-        throw error;
+        }
     }
+
+
 };
-// API kiểm tra đã rate hay chưa
 export const checkRated = async (recipeId, accountId) => {
     if (!accountId) {
-        return 
+        return 0; // Return 0 if no account online
     }
     try {
-        // Gọi API với URL mới `/RecipeRate/{recipeId}/{accountId}`
+        // Making the API call
         const response = await axios.get(`https://rmrbdapi.somee.com/odata/RecipeRate/${recipeId}/${accountId}`, {
             headers: {
-                token: '123-abc'
+                token: "123-abc"
             }
         });
-        console.log('Data check: ',response.data);
-        if (response.status === 200) {
-            const ratepoint = response.data;
-            return ratepoint ;
+        if (response.status === 404) {
+            return 0;
+        } else if (response.status === 200) {
+            return response.data;
         }
-        // const ratepoint = response.data;
-        // return ratepoint !== null ? ratepoint : 0;
     } catch (error) {
         if (error.response && error.response.status === 404) {
-            console.warn(`Data not found for RecipeId ${recipeId} and AccountId ${accountId}. Returning 0.`);
             return 0;
-        } else {
-            console.error(`Error fetching data with RecipeId ${recipeId} and AccountId ${accountId}:`, error);
-            throw error;
         }
     }
 };
+
+
+

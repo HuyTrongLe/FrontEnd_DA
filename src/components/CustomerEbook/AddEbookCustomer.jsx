@@ -8,8 +8,11 @@ import { FaCloudUploadAlt } from "react-icons/fa";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
 import { decryptData } from "../Encrypt/encryptionUtils";
+import { useNavigate } from 'react-router-dom';
 
 const EbookCustomer = () => {
+  const navigate = useNavigate();
+
   const [newEbook, setNewEbook] = useState({
     EbookName: "",
     Description: "",
@@ -386,9 +389,17 @@ const EbookCustomer = () => {
           transition={{ duration: 0.5, ease: "easeInOut" }}
           className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6"
         >
-          <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">
-            Thêm sách điện tử
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center">
+              <Button
+                onClick={() => navigate('/list-ebook-customer')}
+                className="mr-4 text-orange-500 hover:text-orange-600 bg-transparent border border-orange-500 hover:border-orange-600 px-4 py-2 rounded-lg transition-colors"
+              >
+                ← Quay lại
+              </Button>
+              <h2 className="text-3xl font-semibold text-gray-800">Thêm sách điện tử</h2>
+            </div>
+          </div>
 
           <Form onSubmit={addEbook} className="space-y-4">
             <div className="grid md:grid-cols-2 gap-6">
@@ -627,7 +638,7 @@ const EbookCustomer = () => {
 
             <div className="relative">
               <Form.Group controlId="Pdf" className="mb-4">
-                <Form.Label className="block text-lg mb-2">Sách điện tử (PDF)</Form.Label>
+                <Form.Label className="block text-lg mb-2">Sách điện t�� (PDF)</Form.Label>
                 <div
                   onClick={() => document.getElementById("Pdf").click()}
                   className="cursor-pointer w-full p-8 border-2 border-dashed border-gray-300 rounded-lg 

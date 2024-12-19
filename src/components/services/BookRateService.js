@@ -97,17 +97,26 @@ export const updateBookRate = async (ratepoint, customerId,bookId) => {
     const BookRateData = {
         ratepoint, customerId,bookId
     };
-    try {
-        const response = await axios.put(urlBookRate,BookRateData,{
-            headers: {
-                token: '123-abc'
+    let attempts = 0;
+    const maxAttempts = 3;
+    while (attempts < maxAttempts) {
+        try {
+            const response = await axios.put(urlBookRate,BookRateData,{
+                headers: {
+                    token: '123-abc'
+                }
+            });
+            return response.data;
+        } catch (error) {
+            attempts++;
+            if (attempts === maxAttempts) {
+                console.error(`Error updating ratepoint with bookId ${bookId} and AccountId ${customerId}:`, error);
+                throw error;
             }
-        });
-        return response.data;
-    } catch (error) {
-        console.error(`Error updating ratepoint with bookId ${bookId} and AccountId ${customerId}:`, error);
-        throw error;
+        }
     }
+
+    
 };
 // API kiểm tra đã rate hay chưa
 export const checkRated = async (customerId,bookId ) => {
@@ -115,27 +124,24 @@ export const checkRated = async (customerId,bookId ) => {
         console.error('Invalid customerId:', customerId);
         return false;
     }
+    let statuscheck = false;
     try {
         // Gọi API với URL mới `/BookRate/{bookId}/{customerId}`
         const response = await axios.get(`https://rmrbdapi.somee.com/odata/BookRate/${customerId}/${bookId}`, {
             headers: {
                 token: '123-abc'
             }
-        });
-        console.log('Data check: ',response.data);
+        });       
         if (response.status === 200) {
             const ratepoint = response.data;
             return ratepoint ;
+        }else {
+            return 0;
         }
-        // const ratepoint = response.data;
-        // return ratepoint !== null ? ratepoint : 0;
     } catch (error) {
         if (error.response && error.response.status === 404) {
             console.warn(`Data not found for bookId ${bookId} and AccountId ${customerId}. Returning 0.`);
             return 0;
-        } else {
-            console.error(`Error fetching data with bookId ${bookId} and AccountId ${customerId}:`, error);
-            throw error;
         }
     }
 };

@@ -18,6 +18,7 @@ import { createNotification } from "../../services/NotificationService"
 import Swal from 'sweetalert2';
 import { useCart } from '../../Cart/components/CartContext';
 import { decryptData } from "../../Encrypt/encryptionUtils";
+import { useNavigate } from "react-router-dom";
 const BookDetail = () => {
     const { bookId } = useParams();
     const [book, setBook] = useState(null);
@@ -25,7 +26,7 @@ const BookDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showFullDescription, setShowFullDescription] = useState(false);
-
+    const navigate = useNavigate();
     const [address, setAddress] = useState(null);
     const [provinceName, setProvinceName] = useState('');
     const [districtName, setDistrictName] = useState('');
@@ -50,12 +51,41 @@ const BookDetail = () => {
     };
     const handleSaveRecipeRate = async () => {
         try {
-            await saveBookRate(ratepoint, customerId, bookId);
-            setShowModal(false); // Đóng modal khi lưu thành công
-            window.location.reload();
+            if (!accountId) {
+                Swal.fire({
+                    text: "Bạn cần đăng nhập để đánh giá sản phẩm. Bạn có muốn đăng nhập không?",
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Đăng nhập",
+                    cancelButtonText: "Không"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        navigate("/login");
+                    }
+                });
+            } else {
+                await saveBookRate(ratepoint, customerId, bookId);
+                setShowModal(false); // Đóng modal khi lưu thành công
+                Swal.fire({
+                    text: "Đánh giá của bạn đã được lưu thành công!",
+                    icon: "success",
+                    confirmButtonText: "OK"
+                }).then(() => {
+                    // Refresh the state or update UI instead of reloading the page
+                    window.location.reload();
+                });
+            }
         } catch (error) {
-            console.error("Failed to save recipe rate:", error);
+            console.error("Failed to save book rate:", error);
+            Swal.fire({
+                text: "Có lỗi xảy ra khi lưu đánh giá. Vui lòng thử lại.",
+                icon: "error",
+                confirmButtonText: "OK"
+            });
         }
+        
     };
 
     const handleUpdateRecipeRate = async () => {
@@ -74,7 +104,7 @@ const BookDetail = () => {
             receiverName: accountName,
             content: text,
         });
-        if (createById !== customerId){
+        if (createById !== customerId) {
             const addNotification = () => {
                 const newNotificationData = {
                     accountId: createById,
@@ -85,7 +115,7 @@ const BookDetail = () => {
                 createNotification(newNotificationData); // Không cần await
             };
             addNotification();
-        }   
+        }
     };
 
     useEffect(() => {
@@ -520,8 +550,10 @@ const BookDetail = () => {
                                     <button
                                         className="bg-custom-orange hover:bg-orange-500 text-white font-bold py-2 px-4 rounded"
                                         onClick={() => {
-                                            handleNotification(`${accountOnline} đã đánh giá ${ratepoint} sao về sách ${book.bookName} của bạn`);
-                                            checkRatedStatus ? handleUpdateRecipeRate() : handleSaveRecipeRate();
+                                            if (accountId) {
+                                                handleNotification(`${accountOnline} đã đánh giá ${ratepoint} sao về sách ${book.bookName} của bạn`);
+                                                checkRatedStatus ? handleUpdateRecipeRate() : handleSaveRecipeRate();
+                                            }
                                         }}
                                     >
                                         {checkRatedStatus ? "Thay đổi" : "Lưu"}

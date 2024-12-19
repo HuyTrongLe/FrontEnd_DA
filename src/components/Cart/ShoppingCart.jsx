@@ -495,7 +495,7 @@ const updateOrderQuantity = (orderDetailId, newQuantity) => {
                   </div>
                   
                   <div className="col-span-5 flex items-center gap-4">
-                    <Link to={`/book/${order.bookId}`}>
+                    <Link to={`/book-detail/${order.bookId}`}>
                       <img
                         src={book?.images?.[0]?.imageUrl || 'placeholder.jpg'}
                         alt={book?.bookName}
@@ -503,7 +503,7 @@ const updateOrderQuantity = (orderDetailId, newQuantity) => {
                       />
                     </Link>
                     <Link 
-                      to={`/book/${order.bookId}`}
+                      to={`/book-detail/${order.bookId}`}
                       className="font-medium text-gray-800 hover:text-orange-600 transition-colors"
                     >
                       {book?.bookName}

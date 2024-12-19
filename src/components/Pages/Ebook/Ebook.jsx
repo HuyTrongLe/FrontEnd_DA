@@ -3,6 +3,7 @@ import { getEbooks, checkEbookOwnership } from "../../services/EbookService";
 import EbookSidebar from "./EbookSidebar";
 import EbookCard from './EbookCard';
 import Cookies from 'js-cookie';
+import { decryptData } from "../../Encrypt/encryptionUtils";
 
 function Ebook() {
   const [ebooks, setEbooks] = useState([]);
@@ -14,7 +15,7 @@ function Ebook() {
   });
 
   // Cache user ID
-  const customerId = useMemo(() => Cookies.get('UserId'), []);
+  const customerId = useMemo(() => decryptData(Cookies.get('UserId'), []));
 
   // Optimize data fetching
   const fetchEbooks = async () => {

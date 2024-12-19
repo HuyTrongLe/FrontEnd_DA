@@ -7,6 +7,7 @@ import { createEbookTransaction } from '../../services/Transaction';
 import { toast } from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { decryptData } from "../../Encrypt/encryptionUtils";
+
 function EbookDetail() {
   const { ebookId } = useParams();
   const [ebook, setEbook] = useState(null);
@@ -16,7 +17,7 @@ function EbookDetail() {
   const [isPurchased, setIsPurchased] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
-  const accountIdOnline = decryptData(Cookies.get("UserId"));
+
   useEffect(() => {
     const fetchEbookDetail = async () => {
       try {
@@ -24,7 +25,7 @@ function EbookDetail() {
         setEbook(data);
         
         // Check if user owns the ebook
-        const customerId = Cookies.get('UserId');
+        const customerId = decryptData(Cookies.get('UserId'));
         if (customerId) {
           const isOwned = await checkEbookOwnership(customerId, ebookId);
           console.log('Ownership check result:', isOwned); // Debug log
@@ -59,7 +60,7 @@ function EbookDetail() {
         setIsProcessing(true);
         setError(null);
         
-        const customerId = Cookies.get('UserId');
+        const customerId = decryptData(Cookies.get('UserId'));
         
         if (!customerId) {
           throw new Error('Vui lòng đăng nhập để mua sách');
@@ -240,7 +241,6 @@ function EbookDetail() {
                 <CommentEBooks 
                   ebookId={ebookId}
                   createById={ebook.createById}
-                  accountIdonline ={accountIdOnline}
                   roleaccountonline={roleaccountonline}
                 />
               </div>
