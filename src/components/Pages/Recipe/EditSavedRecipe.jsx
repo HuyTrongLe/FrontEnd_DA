@@ -199,13 +199,15 @@ const EditSavedRecipe = () => {
           <Box key={index} display="flex" alignItems="center" gap={1}>
             <TextField
               fullWidth
-              value={item.trim()}
+              value={item}
               onChange={(e) => {
                 const updatedIngredients = [
                   ...editFields.ingredient.split(","),
                 ];
                 updatedIngredients[index] = e.target.value;
                 handleFieldChange("ingredient", updatedIngredients.join(","));
+
+                // Xử lý thông báo lỗi nếu cần
                 if (e.target.value.trim() !== "") {
                   setErrors((prev) => ({
                     ...prev,
@@ -299,14 +301,14 @@ const EditSavedRecipe = () => {
             <Box key={index} display="flex" alignItems="center" gap={1}>
               <TextField
                 fullWidth
-                value={item} 
+                value={item}
                 onChange={(e) => {
                   const updatedTutorials = [
                     ...editFields.tutorial
                       .split("Bước")
-                      .filter((item) => item.trim() !== ""), 
+                      .filter((item) => item.trim() !== ""),
                   ];
-                  updatedTutorials[index] = e.target.value; 
+                  updatedTutorials[index] = e.target.value;
                   handleFieldChange("tutorial", updatedTutorials.join("Bước"));
                   if (e.target.value.trim() !== "") {
                     setErrors((prev) => ({
@@ -348,10 +350,10 @@ const EditSavedRecipe = () => {
               const updatedTutorials = [
                 ...editFields.tutorial
                   .split("Bước")
-                  .filter((item) => item.trim() !== ""), // Loại bỏ khoảng trắng thừa
-                "", // Thêm phần tử trống mới khi người dùng muốn thêm bước
+                  .filter((item) => item.trim() !== ""), 
+                "", 
               ];
-              handleFieldChange("tutorial", updatedTutorials.join("Bước"));
+              handleFieldChange("tutorial", updatedTutorials.join("Bước "));
             }}
             sx={{ width: "33%" }}
           >

@@ -8,7 +8,7 @@ import axios from 'axios';
 import { Form, Row, Col, Button } from 'react-bootstrap';
 import "bootstrap/dist/css/bootstrap.min.css";
 import Swal from 'sweetalert2';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import LoadingOverlay from '../shared/LoadingOverlay';
 import { updateBookStock } from '../services/BookService';
 import { createBookTransaction } from '../services/Transaction';
@@ -69,6 +69,96 @@ const deleteParentOrder = async (orderId) => {
   } catch (error) {
     // Just log the error since the order might have been already deleted
     console.log(`Parent order ${orderId} might have been already deleted:`, error);
+  }
+};
+
+// Add this helper function to handle coin transactions
+const handleCoinTransaction = async (totalAmount, orders, userId) => {
+  try {
+    // First get the current buyer's account data
+    const buyerResponse = await axios.get(
+      `https://rmrbdapi.somee.com/odata/Account/${userId}`,
+      {
+        headers: {
+          'Token': '123-abc'
+        }
+      }
+    );
+    const buyerAccount = buyerResponse.data;
+    
+    if (buyerAccount.coin < totalAmount) {
+      throw new Error('Số dư xu không đủ để thực hiện giao dịch');
+    }
+
+    // Update buyer's balance
+    const updatedBuyerBalance = buyerAccount.coin - totalAmount;
+    await axios.put(
+      `https://rmrbdapi.somee.com/odata/Account/info/${userId}`,
+      {
+        ...buyerAccount,
+        coin: updatedBuyerBalance
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Token': '123-abc'
+        }
+      }
+    );
+
+    // Group orders by seller
+    const ordersBySeller = orders.reduce((acc, order) => {
+      const sellerId = order.bookDetails.createById;
+      if (!acc[sellerId]) {
+        acc[sellerId] = [];
+      }
+      acc[sellerId].push(order);
+      return acc;
+    }, {});
+
+    // For each seller, calculate and transfer their share
+    for (const [sellerId, sellerOrders] of Object.entries(ordersBySeller)) {
+      if (!sellerId) continue;
+
+      // Get seller's account
+      const sellerResponse = await axios.get(
+        `https://rmrbdapi.somee.com/odata/Account/${sellerId}`,
+        {
+          headers: {
+            'Token': '123-abc'
+          }
+        }
+      );
+      const sellerAccount = sellerResponse.data;
+
+      // Calculate seller's share (tạm tính - only the book prices, no shipping fee)
+      const sellerShare = sellerOrders.reduce((total, order) => {
+        return total + order.totalPrice; // This is the "tạm tính" for each order
+      }, 0);
+
+      // Update seller's balance
+      await axios.put(
+        `https://rmrbdapi.somee.com/odata/Account/info/${sellerId}`,
+        {
+          ...sellerAccount,
+          coin: sellerAccount.coin + sellerShare
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Token': '123-abc'
+          }
+        }
+      );
+    }
+
+    return {
+      previousBalance: buyerAccount.coin,
+      updatedBalance: updatedBuyerBalance
+    };
+  } catch (error) {
+    console.error('Error in coin transaction:', error);
+    throw error;
   }
 };
 
@@ -421,18 +511,38 @@ const Checkout = () => {
     return phoneRegex.test(phoneNumber);
   };
 
-  // Add this new helper function for dynamic currency formatting
+  // Update the formatAmount function to have different slide directions
   const formatAmount = (amount, paymentType = paymentMethod) => {
-    if (paymentType === 'COINS') {
-      return `${amount.toLocaleString('vi-VN')} xu`;
-    } else {
-      return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(amount);
-    }
+    const formattedNumber = amount.toLocaleString('vi-VN');
+    
+    return (
+      <div className="relative flex justify-end" style={{ minWidth: '100px' }}>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={paymentType}
+            initial={{ 
+              position: 'absolute', 
+              x: paymentType === 'COINS' ? -50 : 60, 
+              opacity: 0 
+            }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ 
+              x: paymentType === 'COINS' ? 60 : -50, 
+              opacity: 0 
+            }}
+            transition={{ duration: 0.2 }}
+            className="flex items-center"
+          >
+            {formattedNumber}
+            {paymentType === 'COINS' ? (
+              <img src="/images/icon/dollar.png" alt="coin" className="w-4 h-4 ml-1" />
+            ) : (
+              <span className="ml-1">đ</span>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    );
   };
 
   // Calculate total price
@@ -452,7 +562,7 @@ const Checkout = () => {
     'COINS': 1   // Pay with Coins is type 1
   };
 
-  // Modify handlePlaceOrder to track and delete parent orders
+  // Update the handlePlaceOrder function
   const handlePlaceOrder = async () => {
     try {
       setIsProcessing(true);
@@ -469,43 +579,12 @@ const Checkout = () => {
       // Handle coin payment first if applicable
       if (paymentMethod === 'COINS') {
         const totalAmount = calculateCombinedTotalPrice();
-        if (userCoins < totalAmount) {
-          toast.error('Số dư xu không đủ để thực hiện giao dịch');
-          return;
-        }
-
-        // Update user's coin balance
+        
         try {
-          // First get the current account data
-          const accountResponse = await axios.get(
-            `https://rmrbdapi.somee.com/odata/Account/${userId}`,
-            {
-              headers: {
-                'Token': '123-abc'
-              }
-            }
-          );
-
-          const currentAccount = accountResponse.data;
-          
-          // Then update with all required fields
-          const response = await axios.put(
-            `https://rmrbdapi.somee.com/odata/Account/info/${userId}`,
-            {
-              ...currentAccount,
-              coin: userCoins - totalAmount
-            },
-            {
-              headers: {
-                'Content-Type': 'application/json',
-                'Token': '123-abc'
-              }
-            }
-          );
-          console.log('Coin balance updated:', response.data);
+          const transactionResult = await handleCoinTransaction(totalAmount, selectedOrders, userId);
         } catch (error) {
-          console.error('Error updating coin balance:', error);
-          throw new Error('Failed to update coin balance');
+          console.error('Coin transaction failed:', error);
+          throw new Error(error.message || 'Giao dịch xu thất bại');
         }
       }
 
@@ -625,16 +704,21 @@ const Checkout = () => {
         timer: 1500
       });
 
-      // Navigate after success
+      // Navigate first
       navigate('/orders', { 
         replace: true,
         state: { selectedOrders: [] }
       });
 
+      // Reload after a short delay to ensure navigation completes
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+
     } catch (error) {
       console.error('Error placing order:', error);
       
-      // If there was an error and we were using coins, we should try to refund them
+      // If there was an error and we were using coins, attempt to refund
       if (paymentMethod === 'COINS') {
         try {
           const accountResponse = await axios.get(
@@ -714,13 +798,13 @@ const Checkout = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Sản Phẩm
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                   Đơn Giá
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                   Số Lượng
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                   Thành Tiền
                 </th>
               </tr>
@@ -753,15 +837,17 @@ const Checkout = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
                       <div className="text-sm text-gray-900">
                         {formatAmount(price)}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{quantity}</div>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <div className="text-sm text-gray-900">
+                        {quantity}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
                       <div className="text-sm text-gray-900">
                         {formatAmount(totalPrice)}
                       </div>
@@ -928,10 +1014,14 @@ const Checkout = () => {
                 <div>
                   <h4 className="font-medium">Thanh Toán Bằng Xu</h4>
                   <p className="text-sm">
-                    <span className="text-gray-500">Số Dư: {formatAmount(userCoins)}</span>
+                    <span className="text-gray-500 flex items-center">
+                      Số Dư: {userCoins.toLocaleString('vi-VN')} 
+                      <img src="/images/icon/dollar.png" alt="coin" className="w-4 h-4 ml-1" />
+                    </span>
                     {paymentMethod === 'COINS' && userCoins < calculateCombinedTotalPrice() && (
-                      <span className="text-red-500 ml-2">
-                        (Cần: {formatAmount(calculateCombinedTotalPrice())})
+                      <span className="text-red-500 ml-2 flex items-center">
+                        (Cần: {calculateCombinedTotalPrice().toLocaleString('vi-VN')} 
+                        <img src="/images/icon/dollar.png" alt="coin" className="w-4 h-4 ml-1" />)
                       </span>
                     )}
                   </p>
@@ -971,13 +1061,13 @@ const Checkout = () => {
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h3 className="text-lg font-semibold mb-4">Tổng Quan Đơn Hàng</h3>
           <div className="space-y-2">
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span>Tạm Tính:</span>
-              <span>{formatAmount(calculateTotalPrice())}</span>
+              {formatAmount(calculateTotalPrice(), paymentMethod)}
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span>Phí Vận Chuyển:</span>
-              <span>{formatAmount(shippingFee)}</span>
+              {formatAmount(shippingFee, paymentMethod)}
             </div>
             {expectedDeliveryTime && (
               <div className="flex justify-between text-black">
@@ -986,9 +1076,9 @@ const Checkout = () => {
               </div>
             )}
             <div className="border-t pt-2 mt-2">
-              <div className="flex justify-between font-semibold text-lg">
+              <div className="flex justify-between items-center font-semibold text-lg">
                 <span>Tổng Cộng:</span>
-                <span>{formatAmount(calculateCombinedTotalPrice())}</span>
+                {formatAmount(calculateCombinedTotalPrice(), paymentMethod)}
               </div>
             </div>
           </div>
