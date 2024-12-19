@@ -66,7 +66,14 @@ const AccountDetails = () => {
 
   const updateStatus = async (accountId) => {
     try {
-      // Hiển thị hộp thoại xác nhận với SweetAlert2
+      if (accountDetails.status === 1 || accountDetails.status === 2) {
+        Swal.fire(
+          "Không thể thay đổi trạng thái!",
+          "Tài khoản này đã được duyệt, bạn không thể thực hiện thao tác này.",
+          "warning"
+        );
+        return; 
+      }
       const result = await Swal.fire({
         title: "Bạn có chắc chắn muốn thay đổi trạng thái?",
         text: "Điều này sẽ cập nhật trạng thái tài khoản!",
@@ -76,12 +83,10 @@ const AccountDetails = () => {
         cancelButtonText: "Hủy",
       });
 
-      // Nếu người dùng xác nhận
       if (result.isConfirmed) {
         setLoading(true);
 
         const updatePromises = [];
-        // Tạo dữ liệu cập nhật cho AccountProfile
         const updatedAccountProfile = {
           ...accountDetails,
           status: newStatus,

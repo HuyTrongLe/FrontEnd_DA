@@ -16,7 +16,10 @@ import {
 } from "@mui/material";
 import BuildIcon from "@mui/icons-material/Build";
 import Swal from "sweetalert2";
-import { fetchRecipeData,saveRecipeData } from "../../services/CustomerService/CustomerService";
+import {
+  fetchRecipeData,
+  saveRecipeData,
+} from "../../services/CustomerService/CustomerService";
 import { decryptData } from "../../Encrypt/encryptionUtils";
 const EditSavedRecipe = () => {
   const { recipeId } = useParams();
@@ -38,11 +41,10 @@ const EditSavedRecipe = () => {
   const getRecipeData = async (recipeId) => {
     setLoading(true);
     try {
-      const userId = decryptData(Cookies.get("UserId")) ;
+      const userId = decryptData(Cookies.get("UserId"));
       const data = await fetchRecipeData(userId, recipeId);
 
       setRecipeData(data);
-      console.log(data);
       setEditFields({
         ingredient: data.ingredient || "",
         numberOfService: data.numberOfService || 0,
@@ -59,7 +61,6 @@ const EditSavedRecipe = () => {
 
   const handleFieldChange = (field, value) => {
     setEditFields((prev) => ({ ...prev, [field]: value }));
-    // Xóa lỗi khi người dùng nhập
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
@@ -68,6 +69,15 @@ const EditSavedRecipe = () => {
 
     if (!editFields.ingredient?.trim()) {
       newErrors.ingredient = "Nguyên liệu không được để trống.";
+    } else {
+      const ingredients = editFields.ingredient.split(",");
+      ingredients.forEach((item, index) => {
+        if (!item.trim()) {
+          newErrors[`ingredient-${index}`] = `Nguyên liệu ${
+            index + 1
+          } không được để trống.`;
+        }
+      });
     }
     if (editFields.numberOfService <= 0) {
       newErrors.numberOfService = "Số người phục vụ phải lớn hơn 0.";
@@ -76,7 +86,16 @@ const EditSavedRecipe = () => {
       newErrors.nutrition = "Dinh dưỡng không được để trống.";
     }
     if (!editFields.tutorial?.trim()) {
-      newErrors.tutorial = "Hướng dẫn không được để trống.";
+      newErrors.tutorial = "Nguyên liệu không được để trống.";
+    } else {
+      const tutorials = editFields.tutorial.split("Bước");
+      tutorials.forEach((item, index) => {
+        if (!item.trim()) {
+          newErrors[`tutorial-${index}`] = `Bước ${
+            index + 1
+          } không được để trống.`;
+        }
+      });
     }
 
     setErrors(newErrors);
@@ -173,74 +192,174 @@ const EditSavedRecipe = () => {
       </Typography>
 
       <Box display="flex" flexDirection="column" gap={2}>
-        <TextField
-          label="Nguyên liệu"
-          multiline
-          fullWidth
-          rows={4}
-          value={editFields.ingredient}
-          onChange={(e) => handleFieldChange("ingredient", e.target.value)}
-          disabled={!isEditing}
-          error={!!errors.ingredient}
-          helperText={errors.ingredient}
-        />
-        <hr className="my-6 border-t-2 border-gray-500" />
+        <Typography variant="h7" gutterBottom>
+          Nguyên liệu
+        </Typography>
+        {editFields.ingredient.split(",").map((item, index) => (
+          <Box key={index} display="flex" alignItems="center" gap={1}>
+            <TextField
+              fullWidth
+              value={item.trim()}
+              onChange={(e) => {
+                const updatedIngredients = [
+                  ...editFields.ingredient.split(","),
+                ];
+                updatedIngredients[index] = e.target.value;
+                handleFieldChange("ingredient", updatedIngredients.join(","));
+                if (e.target.value.trim() !== "") {
+                  setErrors((prev) => ({
+                    ...prev,
+                    [`ingredient-${index}`]: "",
+                  }));
+                }
+              }}
+              disabled={!isEditing}
+              error={!!errors[`ingredient-${index}`]}
+              helperText={errors[`ingredient-${index}`]}
+            />
+            {isEditing && (
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={() => {
+                  const updatedIngredients = editFields.ingredient
+                    .split(",")
+                    .filter((_, i) => i !== index);
+                  handleFieldChange("ingredient", updatedIngredients.join(","));
+                }}
+              >
+                X
+              </Button>
+            )}
+          </Box>
+        ))}
+        {isEditing && (
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={() => {
+              const updatedIngredients = [
+                ...editFields.ingredient.split(","),
+                "",
+              ];
+              handleFieldChange("ingredient", updatedIngredients.join(","));
+            }}
+            sx={{ width: "33%" }}
+          >
+            +
+          </Button>
+        )}
+      </Box>
 
-        <Box display="flex" gap={2}>
-          <TextField
-            label="Số người phục vụ"
-            type="number"
-            fullWidth
-            value={editFields.numberOfService}
-            onChange={(e) =>
-              handleFieldChange("numberOfService", e.target.value)
-            }
-            error={!!errors.numberOfService}
-            helperText={errors.numberOfService}
-            disabled={!isEditing}
-          />
-          <TextField
-            label="Giá đã thanh toán"
-            type="number"
-            fullWidth
-            value={editFields.purchasePrice}
-            onChange={(e) => handleFieldChange("purchasePrice", e.target.value)}
-            disabled={true}
-          />
-        </Box>
-        <hr className="my-6 border-t-2 border-gray-500" />
+      <hr className="my-6 border-t-2 border-gray-500" />
 
+      <Box display="flex" gap={2}>
         <TextField
-          label="Dinh dưỡng"
-          multiline
+          label="Số người phục vụ"
+          type="number"
           fullWidth
-          rows={4}
-          value={editFields.nutrition}
-          onChange={(e) => handleFieldChange("nutrition", e.target.value)}
+          value={editFields.numberOfService}
+          onChange={(e) => handleFieldChange("numberOfService", e.target.value)}
+          error={!!errors.numberOfService}
+          helperText={errors.numberOfService}
           disabled={!isEditing}
-          error={!!errors.nutrition}
-          helperText={errors.nutrition}
         />
-        <hr className="my-6 border-t-2 border-gray-500" />
-        <p className="text-gray-500 text-sm mb-2">
-          Nếu bạn muốn thêm bước khi chỉnh sửa thì vui lòng thêm chữ{" "}
-          <strong>Bước</strong> ngay ở phía trước nhé{" "}
-          <span role="img" aria-label="smile">
-            😊
-          </span>
-        </p>
         <TextField
-          label="Hướng dẫn"
-          multiline
+          label="Giá đã thanh toán"
+          type="number"
           fullWidth
-          rows={4}
-          value={editFields.tutorial}
-          onChange={(e) => handleFieldChange("tutorial", e.target.value)}
-          disabled={!isEditing}
-          error={!!errors.tutorial}
-          helperText={errors.tutorial}
+          value={editFields.purchasePrice}
+          onChange={(e) => handleFieldChange("purchasePrice", e.target.value)}
+          disabled={true}
         />
       </Box>
+      <hr className="my-6 border-t-2 border-gray-500" />
+
+      <TextField
+        label="Dinh dưỡng"
+        multiline
+        fullWidth
+        rows={4}
+        value={editFields.nutrition}
+        onChange={(e) => handleFieldChange("nutrition", e.target.value)}
+        disabled={!isEditing}
+        error={!!errors.nutrition}
+        helperText={errors.nutrition}
+      />
+      <hr className="my-6 border-t-2 border-gray-500" />
+
+      <Box display="flex" flexDirection="column" gap={2}>
+        <Typography variant="h7" gutterBottom>
+          Hướng dẫn
+        </Typography>
+        {editFields.tutorial
+          .split("Bước")
+          .filter((item, index) => index !== 0 || item.trim() !== "")
+          .map((item, index) => (
+            <Box key={index} display="flex" alignItems="center" gap={1}>
+              <TextField
+                fullWidth
+                value={item} 
+                onChange={(e) => {
+                  const updatedTutorials = [
+                    ...editFields.tutorial
+                      .split("Bước")
+                      .filter((item) => item.trim() !== ""), 
+                  ];
+                  updatedTutorials[index] = e.target.value; 
+                  handleFieldChange("tutorial", updatedTutorials.join("Bước"));
+                  if (e.target.value.trim() !== "") {
+                    setErrors((prev) => ({
+                      ...prev,
+                      [`tutorial-${index}`]: "",
+                    }));
+                  }
+                }}
+                disabled={!isEditing}
+                error={!!errors[`tutorial-${index}`]}
+                helperText={errors[`tutorial-${index}`]}
+                multiline
+                rows={3}
+              />
+              {isEditing && (
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={() => {
+                    const updatedTutorials = editFields.tutorial
+                      .split("Bước")
+                      .filter((_, i) => i !== index);
+                    handleFieldChange(
+                      "tutorial",
+                      updatedTutorials.join("Bước")
+                    );
+                  }}
+                >
+                  X
+                </Button>
+              )}
+            </Box>
+          ))}
+        {isEditing && (
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={() => {
+              const updatedTutorials = [
+                ...editFields.tutorial
+                  .split("Bước")
+                  .filter((item) => item.trim() !== ""), // Loại bỏ khoảng trắng thừa
+                "", // Thêm phần tử trống mới khi người dùng muốn thêm bước
+              ];
+              handleFieldChange("tutorial", updatedTutorials.join("Bước"));
+            }}
+            sx={{ width: "33%" }}
+          >
+            +
+          </Button>
+        )}
+      </Box>
+
       <hr className="my-6 border-t-2 border-gray-500" />
 
       <Box sx={{ mt: 3 }}>
@@ -248,9 +367,9 @@ const EditSavedRecipe = () => {
           <Button
             variant="contained"
             sx={{
-              backgroundColor: "#FF6F00", // Màu cam
+              backgroundColor: "#FF6F00",
               "&:hover": {
-                backgroundColor: "#FF8F1F", // Màu cam nhạt khi hover
+                backgroundColor: "#FF8F1F",
               },
             }}
             onClick={() => setIsEditing(true)}

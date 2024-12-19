@@ -11,9 +11,12 @@ import { createNotification } from "../services/NotificationService";
 import { updateToSeller } from "../services/CustomerService/CustomerService";
 import { decryptData } from "../Encrypt/encryptionUtils";
 import { useNavigate } from "react-router-dom";
+import { listAccountProfile } from "../services/ModeratorService/Api";
+
 const UpdateToSeller = () => {
   const [accountID, setAccountID] = useState();
   const [portrait, setPortrait] = useState(null);
+  const [accountProfile, setDataAccountProfile] = useState(null);
   const [portraitPreview, setPortraitPreview] = useState(null);
   const [bankAccountQR, setBankAccountQR] = useState(null);
   const [bankAccountQRPreview, setBankAccountQRPreview] = useState(null);
@@ -55,7 +58,19 @@ const UpdateToSeller = () => {
       }
     };
     fetchReport();
+    getDataAccountProfiles();
   }, []);
+
+  const getDataAccountProfiles = async () => {
+    try {
+      const result = await listAccountProfile();
+      setDataAccountProfile(result);
+      console.log(result);
+    } catch (error) {
+      console.error("Error fetching account data:", error);
+    }
+  };
+
   // Xử lý post thông tin lên db cho bảng AccountProfile
   const handleSaveAccountProfile = async () => {
     let formErrors = {};
@@ -72,6 +87,19 @@ const UpdateToSeller = () => {
         icon: "error",
         title: "Có lỗi xảy ra!",
         text: "Vui lòng điền đầy đủ thông tin.",
+      });
+      return;
+    }
+    const isIdCardNumberExist = accountProfile.some(
+      (profile) => profile.idcardNumber === idCardNumber
+    );
+    console.log("Danh sách tài khoản hiện tại:", accountProfile);
+    if (isIdCardNumberExist) {
+      console.log("CCCD đã tồn tại trong hệ thống:", idCardNumber);
+      Swal.fire({
+        icon: "warning",
+        title: "CCCD đã được sử dụng!",
+        text: "Thẻ CCCD này đã được sử dụng. Vui lòng đăng nhập vào tài khoản đã đăng ký trước đó.",
       });
       return;
     }
@@ -106,7 +134,7 @@ const UpdateToSeller = () => {
       Swal.fire({
         icon: "success",
         title: "Thành công!",
-        text: "Account Profile đã được thêm thành công.",
+        text: "Thông tin tài khoản đã được thêm thành công.",
       });
     } catch (error) {
       if (error.response && error.response.data) {
@@ -134,7 +162,7 @@ const UpdateToSeller = () => {
     setFrontIDCardPreview(null);
     setBackIDCard(null);
     setBackIDCardPreview(null);
-    setDateOfBirth(new Date());
+    setDateOfBirth(null);
     setIdCardNumber("");
     setBankAccountQR(null);
     setBankAccountQRPreview(null);

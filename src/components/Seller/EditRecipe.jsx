@@ -35,8 +35,8 @@ const EditRecipe = () => {
   const [createDate, setCreateDate] = useState("");
   const [totalTime, setTotalTime] = useState("");
   const [createById, setCreateById] = useState("");
-  const [tags, setTags] = useState([]); // Tất cả các tag đang hoạt động
-  const [selectedTagIds, setSelectedTagIds] = useState([]); // Các tag được chọn
+  const [tags, setTags] = useState([]);
+  const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [selectedTagNames, setSelectedTagNames] = useState([]);
   const [tagMap, setTagMap] = useState({});
   const [energy, setEnergy] = useState("");
@@ -47,7 +47,6 @@ const EditRecipe = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Lấy dữ liệu Recipe từ API
   const fetchRecipeData = async () => {
     try {
       const recipeData = await getRecipeById(id);
@@ -57,10 +56,23 @@ const EditRecipe = () => {
       setNumberOfService(recipeData.numberOfService);
       setStatus(recipeData.status);
       setNutrition(recipeData.nutrition);
-      setTutorial(recipeData.tutorial);
+      if (recipeData.tutorial) {
+        setTutorial(
+          recipeData.tutorial
+            .split("Bước")
+            .map((ing) => ing.trim())
+            .filter((ing) => ing !== "")
+        );
+      }
       setVideo(recipeData.video);
       setDescription(recipeData.description);
-      setIngredient(recipeData.ingredient);
+      //setIngredient(recipeData.ingredient);
+      // Kiểm tra và tách ingredient nếu có dấu phẩy
+      if (recipeData.ingredient) {
+        setIngredient(
+          recipeData.ingredient.split(",").map((ing) => ing.trim())
+        );
+      }
       setEnergy(recipeData.energy);
       setCreateById(recipeData.createById);
       setCreateDate(recipeData.createDate?.slice(0, 10) || "");
@@ -91,11 +103,24 @@ const EditRecipe = () => {
       newErrors.price = "Vui lòng nhập giá hợp lệ.";
     }
     if (!nutrition) newErrors.nutrition = "Thông tin dinh dưỡng là cần thiết.";
-    if (!tutorial) newErrors.tutorial = "Hướng dẫn là cần thiết.";
+    tutorial.forEach((ing, index) => {
+      if (!ing.trim()) {
+        newErrors[`tutorial_${index}`] = `Bước ${
+          index + 1
+        } không được để trống.`;
+      }
+    });
     if (!video) newErrors.video = "Video là bắt buộc.";
-    if (!ingredient) newErrors.ingredient = "Thành phần là bắt buộc.";
+    ingredient.forEach((ing, index) => {
+      if (!ing.trim()) {
+        newErrors[`ingredient_${index}`] = `Nguyên liệu ${
+          index + 1
+        } không được để trống.`;
+      }
+    });
     if (!description) newErrors.description = "Mô tả là bắt buộc.";
-    if (!energy) newErrors.energy = "Năng lượng là bắt buộc.";
+    if (!energy || isNaN(energy) || energy <= 0)
+      newErrors.energy = "Vui lòng nhập giá trị hợp lệ.";
 
     if (!totalTime || isNaN(totalTime) || totalTime <= 0) {
       newErrors.totalTime = "Vui lòng nhập tổng thời gian hợp lệ.";
@@ -131,7 +156,6 @@ const EditRecipe = () => {
   }, [id]);
 
   // Xử lý khi chọn tag
-  // Handle the selection change for tags
   const handleTagSelection = (e) => {
     const tagId = parseInt(e.target.value);
     const isChecked = e.target.checked;
@@ -148,10 +172,19 @@ const EditRecipe = () => {
 
   // Khi trường input thay đổi thì lỗi sẽ reset về null
   const handleInputChange = (setter, field) => (e) => {
-    setter(e.target.value);
-    setErrors((prevErrors) => ({ ...prevErrors, [field]: "" }));
+    const value = e.target.value;
+    setter(value);
+
+    // Nếu có dấu phẩy, tách thành các nguyên liệu riêng biệt và lưu vào ingredient
+    if (field === "ingredient") {
+      setIngredient(value.split(",").map((ing) => ing.trim()));
+    }
+
+    if (field === "tutorial") {
+      setTutorial(value.split("Bước").map((ing) => ing.trim()));
+    }
+    setErrors((prevErrors) => ({ ...prevErrors, [field]: null }));
   };
-  // Cập nhật công thức khi submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateFields()) return;
@@ -160,12 +193,12 @@ const EditRecipe = () => {
       recipeName,
       price,
       numberOfService,
-      status:-1,
+      status: -1,
       nutrition,
-      tutorial,
+      tutorial: tutorial.join("Bước "),
       video,
       description,
-      ingredient,
+      ingredient: ingredient.join(", "),
       createDate,
       updatedDate,
       totalTime,
@@ -175,35 +208,30 @@ const EditRecipe = () => {
     Swal.fire({
       title: "Đang cập nhật...",
       text: "Vui lòng đợi trong giây lát.",
-      allowOutsideClick: false, // Người dùng không thể click bên ngoài cửa sổ
+      allowOutsideClick: false,
       didOpen: () => {
-        Swal.showLoading(); // Hiển thị spinner khi đang loading
+        Swal.showLoading();
       },
     });
     try {
-      // Cập nhật recipe
       await updateRecipe(id, updatedRecipe);
 
-      // Lấy các tag hiện tại của recipe từ cơ sở dữ liệu
       const oldTags = await getRecipeTags(id);
 
       const oldTagIds = oldTags.map((tag) => tag.tagId);
 
-      // Xóa các tag không còn trong danh sách đã chọn
       for (const tagId of oldTagIds) {
         if (!selectedTagIds.includes(tagId)) {
           await deleteRecipeTag(id, tagId);
         }
       }
 
-      // Thêm các tag mới vào danh sách
       for (const tagId of selectedTagIds) {
         if (!oldTagIds.includes(tagId)) {
           await addRecipeTag(tagId, id);
         }
       }
 
-      // Gọi lại fetchRecipeData để làm mới danh sách tag
       await fetchRecipeData();
       Swal.fire("Thành công", "Cập nhật công thức thành công!", "success").then(
         () => navigate("/recipe-list-seller")
@@ -218,8 +246,44 @@ const EditRecipe = () => {
       console.error("Error:", error);
     }
   };
+  const handleIngredientChange = (index, value) => {
+    const updatedIngredients = [...ingredient];
+    updatedIngredients[index] = value;
+    setIngredient(updatedIngredients);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [`ingredient_${index}`]: null,
+    }));
+  };
 
-  if (!recipe) return <div>Loading...</div>;
+  const handleTutorialChange = (index, value) => {
+    const updatedTutorials = [...tutorial];
+    updatedTutorials[index] = value;
+    setTutorial(updatedTutorials);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [`tutorial_${index}`]: null,
+    }));
+  };
+  const addIngredient = () => {
+    setIngredient([...ingredient, ""]);
+  };
+
+  // Thêm một nguyên liệu mới
+  const addTutorial = () => {
+    setTutorial([...tutorial, ""]);
+  };
+
+  // Xóa một nguyên liệu
+  const removeIngredient = (index) => {
+    const updatedIngredients = ingredient.filter((_, i) => i !== index);
+    setIngredient(updatedIngredients);
+  };
+  const removeTutorial = (index) => {
+    const updatedTutorials = tutorial.filter((_, i) => i !== index);
+    setTutorial(updatedTutorials);
+  };
+  if (!recipe) return <div>Đang tải...</div>;
 
   return (
     <>
@@ -301,19 +365,43 @@ const EditRecipe = () => {
           </Box>
 
           <Box mb={2}>
-            {errors.tutorial && (
-              <p className="text-danger">{errors.tutorial}</p>
-            )}
-            <TextField
-              label="Hướng dẫn"
+            <Typography variant="subtitle1" sx={{ marginBottom: 1 }}>
+              Hướng dẫn
+            </Typography>
+            {tutorial.map((ing, index) => (
+              <Box key={index} display="flex" alignItems="center" mb={2}>
+                <TextField
+                  error={!!errors[`tutorial_${index}`]}
+                  helperText={errors[`tutorial_${index}`]}
+                  label={`Bước ${index + 1}`}
+                  variant="outlined"
+                  fullWidth
+                  value={ing}
+                  onChange={(e) => handleTutorialChange(index, e.target.value)}
+                  sx={{ color: "black" }}
+                  multiline
+                  rows={4}
+                />
+                {tutorial.length > 1 && (
+                  <Button
+                    onClick={() => removeTutorial(index)}
+                    variant="contained"
+                    color="secondary"
+                    sx={{ marginLeft: 1 }}
+                  >
+                    Xóa
+                  </Button>
+                )}
+              </Box>
+            ))}
+
+            <Button
+              onClick={addTutorial}
               variant="outlined"
-              fullWidth
-              multiline
-              rows={4}
-              value={tutorial}
-              onChange={handleInputChange(setTutorial, "tutorial")}
-              sx={{ color: "black" }}
-            />
+              sx={{ marginTop: 1 }}
+            >
+              Thêm bước
+            </Button>
           </Box>
 
           <Box mb={2}>
@@ -345,19 +433,45 @@ const EditRecipe = () => {
           </Box>
 
           <Box mb={2}>
-            {errors.ingredient && (
-              <p className="text-danger">{errors.ingredient}</p>
-            )}
-            <TextField
-              label="Nguyên liệu"
+            <Typography variant="subtitle1" sx={{ marginBottom: 1 }}>
+              Nguyên liệu
+            </Typography>
+            {ingredient.map((ing, index) => (
+              <Box key={index} display="flex" alignItems="center" mb={2}>
+                <TextField
+                  error={!!errors[`ingredient_${index}`]}
+                  helperText={errors[`ingredient_${index}`]}
+                  label={`Nguyên liệu ${index + 1}`}
+                  variant="outlined"
+                  fullWidth
+                  value={ing}
+                  onChange={(e) =>
+                    handleIngredientChange(index, e.target.value)
+                  }
+                  sx={{ color: "black" }}
+                  multiline
+                  rows={1}
+                />
+                {ingredient.length > 1 && (
+                  <Button
+                    onClick={() => removeIngredient(index)}
+                    variant="contained"
+                    color="secondary"
+                    sx={{ marginLeft: 1 }}
+                  >
+                    Xóa
+                  </Button>
+                )}
+              </Box>
+            ))}
+
+            <Button
+              onClick={addIngredient}
               variant="outlined"
-              fullWidth
-              multiline
-              rows={4}
-              value={ingredient}
-              onChange={handleInputChange(setIngredient, "ingredient")}
-              sx={{ color: "black" }}
-            />
+              sx={{ marginTop: 1 }}
+            >
+              Thêm nguyên liệu
+            </Button>
           </Box>
           <Box mb={2}>
             {errors.energy && <p className="text-danger">{errors.energy}</p>}
@@ -418,15 +532,20 @@ const EditRecipe = () => {
                   key={tag.tagId}
                   control={
                     <Checkbox
-                      checked={selectedTagIds.includes(tag.tagId)} // Kiểm tra nếu tagId đã được chọn
-                      onChange={handleTagSelection} // Gọi hàm khi người dùng thay đổi checkbox
-                      value={tag.tagId} // Gửi tagId khi checkbox thay đổi
+                      checked={selectedTagIds.includes(tag.tagId)}
+                      onChange={handleTagSelection}
+                      value={tag.tagId}
                     />
                   }
                   label={tag.tagName}
                 />
               ))}
             </FormGroup>
+            {errors.selectedTagIds && (
+              <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                {errors.selectedTagIds}
+              </Typography>
+            )}
           </Box>
 
           <Box mb={2}>
@@ -446,25 +565,16 @@ const EditRecipe = () => {
             </ul>
           </Box>
 
-          <Box mb={2}>
-            <Typography variant="h6" color="black">
-              Các thẻ đã chọn:
-            </Typography>
-            <p style={{ color: "black" }}>{selectedTagNames.join(", ")}</p>
-          </Box>
-
           <Box mb={2} className="flex justify-between gap-4">
-            {/* Nút Back */}
             <Button
               type="button"
               variant="outlined"
               className="w-1/2 bg-gradient-to-r from-gray-100 to-gray-300 text-gray-700 border-none rounded-md shadow-md hover:from-gray-200 hover:to-gray-400 hover:shadow-lg transition-all"
-              onClick={() => navigate(-1)} // Sử dụng navigate để quay lại trang trước
+              onClick={() => navigate(-1)}
             >
               Quay lại
             </Button>
 
-            {/* Nút Lưu */}
             <Button
               type="submit"
               variant="contained"
