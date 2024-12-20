@@ -156,7 +156,11 @@ const Comments = ({ ebookId, createById,accountIdonline, roleaccountonline }) =>
                 <CommentForm
                     submitLabel="Gửi"
                     handleSubmit={handleWriteClick}
-                    onClick={() => handleNotification(`${accountOnline} đã bình luận về sách điện tử ${ebook.ebookName} của bạn`)}
+                    onClick={() => {
+                        if(accountId){
+                            handleNotification(`${accountOnline} đã bình luận về sách điện tử ${ebook.ebookName} của bạn`)
+                        }
+                    }}
                 />
                 <div className="comments-container">
                     {Comments.slice(0, visibleComments).map((comment) => {

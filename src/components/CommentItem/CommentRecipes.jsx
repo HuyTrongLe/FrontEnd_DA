@@ -159,7 +159,11 @@ const Comments = ({ recipeId, createById,accountIdonline, roleaccountonline }) =
                 <CommentForm
                     submitLabel="Gửi"
                     handleSubmit={handleWriteClick}
-                    onClick={() => handleNotification(`${accountOnline} đã bình luận về công thức ${recipe.recipeName} của bạn`)}
+                    onClick={() => {
+                        if(accountId){
+                            handleNotification(`${accountOnline} đã bình luận về công thức ${recipe.recipeName} của bạn`)
+                        }
+                    }}
                 />
                 <div className="comments-container">
                     {Comments.slice(0, visibleComments).map((comment) => {
