@@ -155,3 +155,25 @@ export const updateBookStock = async (bookId, quantity) => {
     throw error;
   }
 };
+
+// API lấy tất cả ảnh theo BookId
+export const getAllImagesByBookId = async (bookId) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/Image?$filter=BookId eq ${bookId} and status eq 1`,
+      {
+        headers: {
+          token: TOKEN,
+        },
+      }
+    );
+
+    if (response.data && response.data.length > 0) {
+      return response.data.map(image => image.imageUrl.Value || image.imageUrl);
+    }
+    return ['https://via.placeholder.com/150'];
+  } catch (error) {
+    console.error(`Error fetching images for book ID ${bookId}:`, error);
+    return ['https://via.placeholder.com/150'];
+  }
+};

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { getBookById, getFirstImageByBookId } from '../../services/BookService';
+import { getBookById, getFirstImageByBookId, getAllImagesByBookId } from '../../services/BookService';
 import { FaShippingFast, FaRedo, FaUsers, FaShoppingCart, FaCreditCard, FaTag, FaCheckCircle } from 'react-icons/fa';
 import { Button } from '@material-tailwind/react';
 import { Tooltip } from '@mui/material';
@@ -47,6 +47,9 @@ const BookDetail = () => {
     const [checkRatedStatus, setcheckRated] = useState("");
     const [accountName, setAccountName] = useState("")
     const [roleaccountonline, setRoleaccountonline] = useState("");
+    const [images, setImages] = useState([]);
+    const [selectedImage, setSelectedImage] = useState(0);
+
     const handleOpenModal = () => {
         setShowModal(true);
     };
@@ -124,7 +127,9 @@ const BookDetail = () => {
         const fetchBookData = async () => {
             try {
                 const data = await getBookById(bookId);
-                const imageData = await getFirstImageByBookId(bookId);
+                const imagesList = await getAllImagesByBookId(bookId);
+                setImages(imagesList);
+                setSelectedImage(0); // Select first image by default
                 const rateData = await getBookRatePoint(bookId);
                 const countrate = await getCountBookRateBybookId(bookId);
                 const checkrateddata = await checkRated(accountId, bookId);
@@ -137,7 +142,7 @@ const BookDetail = () => {
                 setBook(data);
                 setAccountName(createbyName.userName);
                 setRoleaccountonline(infoacconline.roleId);
-                setImageUrl(imageData);
+                setImageUrl(imagesList[0]);
                 const addressData = await fetch(`https://rmrbdapi.somee.com/odata/CustomerAddress/${data.senderAddressId}`, {
                     method: 'GET',
                     headers: {
@@ -290,6 +295,46 @@ const BookDetail = () => {
     const fullStars = Math.floor(roundedAverageRate);
     const halfStar = averageRate % 1 >= 0.5 ? 1 : 0;
 
+    const renderImageGallery = () => (
+        <div className="relative flex flex-col">
+            {/* Main image container with background */}
+            <div className="relative mb-4">
+                {/* Background shadow - only covers main image */}
+                <div className="absolute inset-0 bg-gray-100 rounded-lg shadow-inner"></div>
+                
+                {/* Main image */}
+                <div className="relative z-10 p-6">
+                    <img
+                        src={images[selectedImage]}
+                        alt={`${book.bookName} - Image ${selectedImage + 1}`}
+                        className="w-full h-[400px] object-contain rounded-lg"
+                    />
+                </div>
+            </div>
+
+            {/* Thumbnails outside of shadow background */}
+            <div className="flex space-x-2 overflow-x-auto pb-2">
+                {images.map((img, index) => (
+                    <button
+                        key={index}
+                        onClick={() => setSelectedImage(index)}
+                        className={`flex-shrink-0 ${
+                            selectedImage === index 
+                                ? 'border-2 border-blue-500 shadow-md' 
+                                : 'border border-gray-200 hover:border-blue-300'
+                        } rounded-md overflow-hidden transition-all duration-200`}
+                    >
+                        <img
+                            src={img}
+                            alt={`Thumbnail ${index + 1}`}
+                            className="w-20 h-20 object-cover"
+                        />
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+
     if (loading) {
         return (
             <div className="d-flex justify-content-center">
@@ -312,19 +357,10 @@ const BookDetail = () => {
                 <div className="relative">
                     {/* Lớp nền */}
                     <div className="absolute inset-0 bg-gray-100 rounded-lg shadow-inner p-6 -z-10"></div>
-
                     {/* Lớp book-border nằm trên phần hình ảnh, chỉ phủ lên hình ảnh */}
                     <div className='relative'>
-                        <div className="absolute top-0 left-0 right-0 bottom-0 book-border z-20"></div> {/* Book border overlay */}
-
                         {/* Phần hình ảnh */}
-                        <div className="mb-4 relative z-10">
-                            <img
-                                src={imageUrl || 'https://via.placeholder.com/150'}
-                                alt={book.bookName}
-                                className="w-full rounded-lg shadow-lg"
-                            />
-                        </div>
+                        {renderImageGallery()}
                     </div>
 
                     {/* Các nút */}
