@@ -66,13 +66,16 @@ const AccountDetails = () => {
 
   const updateStatus = async (accountId) => {
     try {
-      if (accountDetails.status === 1 || accountDetails.status === 2) {
+      if (
+        (accountDetails.status === 1 || accountDetails.status === 2) &&
+        newStatus === 0
+      ) {
         Swal.fire(
           "Không thể thay đổi trạng thái!",
           "Tài khoản này đã được duyệt, bạn không thể thực hiện thao tác này.",
           "warning"
         );
-        return; 
+        return;
       }
       const result = await Swal.fire({
         title: "Bạn có chắc chắn muốn thay đổi trạng thái?",
@@ -93,7 +96,6 @@ const AccountDetails = () => {
           censorId: censorID,
           censorNote: censorNote,
         };
-        // Tạo promise cho việc cập nhật AccountProfile
         const accountProfileUpdatePromise = updateAccountProfile(
           accountId,
           updatedAccountProfile
@@ -101,7 +103,6 @@ const AccountDetails = () => {
 
         updatePromises.push(accountProfileUpdatePromise);
 
-        // Nếu trạng thái mới là 1, cập nhật thêm roleId trong bảng Account
         if (newStatus === 1) {
           const updatedAccount = {
             ...dataAccount,
@@ -113,17 +114,13 @@ const AccountDetails = () => {
           updatePromises.push(accountUpdatePromise);
         }
 
-        // Thực thi các promise
         await Promise.all(updatePromises);
 
-        // Refresh dữ liệu sau khi cập nhật
         fetchAccount();
         fetchAccountDetails();
 
-        // Đặt lại trạng thái chỉnh sửa
         setStatusEditing(false);
 
-        // Hiển thị thông báo thành công
         Swal.fire(
           "Thành công!",
           "Trạng thái tài khoản đã được cập nhật.",

@@ -4,11 +4,13 @@ import { Document, Page } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { pdfjs } from 'react-pdf';
-import { getEbookById } from '../../services/EbookService';
+import { getEbookById, checkEbookOwnership } from '../../services/EbookService';
 import { CSSTransition, SwitchTransition } from 'react-transition-group';
 import LoadingPage from '../../Loader/LoadingPage';
 import storage from '../../../firebase/config';
 import { ref, getDownloadURL } from 'firebase/storage';
+import { decryptData } from "../../Encrypt/encryptionUtils";
+import Cookies from 'js-cookie';
 
 // Make sure to use the same version as your react-pdf
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -25,6 +27,7 @@ const EbookReader = () => {
   const navigate = useNavigate();
   const [slideDirection, setSlideDirection] = useState('right');
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   // Memoize options to prevent unnecessary reloads
   const options = useMemo(() => ({
@@ -36,33 +39,43 @@ const EbookReader = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    const fetchEbook = async () => {
+    const checkAccess = async () => {
       try {
-        const data = await getEbookById(ebookId);
-        console.log("Fetched ebook:", data);
-        if (!data || !data.pdfurl) {
-          throw new Error('PDF URL is missing');
+        setLoading(true);
+        const customerId = decryptData(Cookies.get('UserId'));
+        
+        if (!customerId) {
+          navigate(`/ebook/${ebookId}`);
+          return;
         }
+
+        const data = await getEbookById(ebookId);
         setEbook(data);
+
+        // Check if user owns the ebook or is the creator
+        const isOwned = await checkEbookOwnership(customerId, ebookId);
+        const isCreator = data.createById === customerId;
+
+        if (!isOwned && !isCreator) {
+          navigate(`/ebook/${ebookId}`);
+          return;
+        }
+
+        setIsAuthorized(true);
 
         const storageRef = ref(storage, data.pdfurl);
         const url = await getDownloadURL(storageRef);
         setPdfBlob(url);
       } catch (error) {
-        console.error('Error fetching ebook:', error);
+        console.error('Error checking access:', error);
+        navigate(`/ebook/${ebookId}`);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchEbook();
-
-    return () => {
-      if (pdfBlob) {
-        URL.revokeObjectURL(pdfBlob);
-      }
-    };
-  }, [ebookId]);
+    checkAccess();
+  }, [ebookId, navigate]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -109,6 +122,10 @@ const EbookReader = () => {
       navigate(`/ebook/${ebookId}`);
     }, 500);
   };
+
+  if (!isAuthorized) {
+    return null; // Or a loading state if you prefer
+  }
 
   if (loading || isNavigating) {
     return <LoadingPage />;

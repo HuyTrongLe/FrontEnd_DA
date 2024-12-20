@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from 'react-router-dom';
-import Cookies from 'js-cookie';
+
 import { getCoinTransactionByCoinTransactionId } from "../../services/Transaction";
 import { getAccountById } from "../../services/AccountService";
 import { updateAccount } from "../../services/AccountService";
 import { updateCoinTransaction } from "../../services/Transaction";
 
+import Swal from 'sweetalert2';
 
 const WithdrawResponse = () => {
 
     const { coinTransactionId } = useParams();
     const [withdraw, setWithdraw] = useState({});
-    const [UserId, setUserId] = useState('');
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -20,28 +21,39 @@ const WithdrawResponse = () => {
             console.log('response:', response);
             setWithdraw(response[0]);
         }
-
         fetchData();
     }, []);
 
-    const handelApprove = async () => {
+    const confirm = async () => {
         try {
-
             withdraw.status = 1;
             const response2 = await updateCoinTransaction(withdraw);
             if (response2.status) {
-                alert('Duyệt thành công');
-                window.location.href = '/withdrawmod';
+                Swal.fire({
+                    title: 'Duyệt thành công!',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/withdrawmod';
+                    }
+                });
+
             }
             else {
-                alert('Duyệt thất bại');
+                Swal.fire({
+                    title: 'Duyệt rút xu thất bại!',
+                    text: 'Vui lòng kiểm tra lại!',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
             }
         } catch (error) {
             console.error('Error updating account:', error);
         }
     }
 
-    const handelCancel = async () => {
+    const deny = async () => {
         const account = await getAccountById(withdraw.customer.accountId);
         console.log('account:', account);
         account.coin = account.coin - withdraw.coinFluctuations;
@@ -49,12 +61,52 @@ const WithdrawResponse = () => {
         withdraw.status = 0;
         const response2 = await updateCoinTransaction(withdraw);
         if (response.status && response2.status) {
-            alert('Hủy thành công');
-            window.location.href = '/withdrawmod';
+            Swal.fire({
+                title: 'Hủy thành công!',
+                icon: 'success',
+                confirmButtonText: 'OK',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/withdrawmod';
+                }
+            });
         } else {
-            alert('Hủy thất bại');
+            Swal.fire({
+                title: 'Hủy rút xu thất bại!',
+                text: 'Vui lòng kiểm tra lại!',
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
         }
+    }
+    const handelApprove = async () => {
+        Swal.fire({
+            title: 'Xác nhận!',
+            text: 'Bạn chắc chắn đã kiển tra đầy đủ thông tin?',
+            icon: 'warning',
+            showCancelButton: true,
+            cancelButtonText: 'Hủy',
+            confirmButtonText: 'OK',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                confirm();
+            }
+        });
+    }
 
+    const handelCancel = async () => {
+        Swal.fire({
+            title: 'Xác nhận!',
+            text: 'Bạn chắc chắn muốn hủy yêu cầu này?',
+            icon: 'warning',
+            showCancelButton: true,
+            cancelButtonText: 'Hủy',
+            confirmButtonText: 'OK',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                deny();
+            }
+        });
     }
 
     return (

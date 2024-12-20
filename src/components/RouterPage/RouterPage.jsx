@@ -92,9 +92,6 @@ export default function RouterPage() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/adminrecipe" element={<AdminRecipe />} />
-
-          <Route path="/admincreaterecipe" element={<AdminCreateRecipe />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-failed" element={<PaymentFailed />} />
           <Route
@@ -138,18 +135,30 @@ export default function RouterPage() {
               </ProtectedRoute>
             }
           />
-          <Route path="/ebook/:ebookId/read" element={<EbookReader />} />
+          <Route path="/ebook/:ebookId/read" element={<ProtectedRoute allowedRoles={["Seller", "Customer"]}>
+            <EbookReader />
+          </ProtectedRoute>} />
           <Route element={<Layout />}>
             <Route path="*" element={<ErrorPage />}></Route>
             <Route path="places/:id" element={<SinglePlacePage />}></Route>
+
             <Route
               path="/edit-profile/:accountID"
-              element={<EditRoleUpdated />}
+              element={
+                <ProtectedRoute allowedRoles={["Customer"]}>
+                  <EditRoleUpdated />
+                </ProtectedRoute>
+              }
             />
             <Route
               path="/recipecustomer-detail/:recipeId"
-              element={<DetailSavedRecipe />}
+              element={
+                <ProtectedRoute allowedRoles={["Customer", "Seller"]}>
+                  <DetailSavedRecipe />
+                </ProtectedRoute>
+              }
             />
+
             <Route path="/add-ebook-customer" element={<AddEBookCustomer />} />
             <Route path="/add-book-customer" element={<AddBookCustomer />} />
             <Route
@@ -164,7 +173,15 @@ export default function RouterPage() {
               path="/recipe-seller-detail/:recipeId"
               element={<RecipeSellerDetail />}
             />
-            <Route path="/update-to-seller" element={<UpdateToSeller />} />
+
+            <Route
+              path="/update-to-seller"
+              element={
+                <ProtectedRoute allowedRoles={["Customer"]}>
+                  <UpdateToSeller />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/" element={<HomePage />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/recipe/:searchString?" element={<Recipe />} />
@@ -175,16 +192,45 @@ export default function RouterPage() {
             <Route path="/ebook/:ebookId" element={<EbookDetail />} />
             <Route path="/coinTransaction" element={<CoinTransaction />} />
             <Route path="/termsofpurchase" element={<TermsOfPurchase />} />
-            <Route path="/edit-recipe" element={<EditRecipe />} />
-            <Route path="/create-recipe-seller" element={<RecipeCreateSeller />} />
+            <Route
+              path="/edit-recipe"
+              element={
+                <ProtectedRoute allowedRoles={["Customer","Seller"]}>
+                  <EditRecipe />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/create-recipe-seller"
+              element={
+                <ProtectedRoute allowedRoles={["Seller"]}>
+                  <RecipeCreateSeller />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/recipe-seller-detail"
-              element={<RecipeSellerDetail />}
+              element={
+                <ProtectedRoute allowedRoles={["Seller"]}>
+                  <RecipeSellerDetail />
+                </ProtectedRoute>
+              }
             />
-            <Route path="/recipe-list-seller" element={<RecipeListSeller />} />
+            <Route
+              path="/recipe-list-seller"
+              element={
+                <ProtectedRoute allowedRoles={["Seller"]}>
+                  <RecipeListSeller />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/editrecipecustomer-recipe/:recipeId"
-              element={<EditRecipeForCustomer />}
+              element={
+                <ProtectedRoute allowedRoles={["Seller","Customer"]}>
+                  <EditRecipeForCustomer />
+                </ProtectedRoute>
+              }
             />
             <Route path="/listreport" element={<ListReport />} />
             <Route path="/reportdetail/:reportId" element={<ReportDetail />} />

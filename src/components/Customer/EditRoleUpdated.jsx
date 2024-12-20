@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { Container, Row, Col, Button, Form } from "react-bootstrap";
 import Tesseract from "tesseract.js";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useParams } from "react-router-dom";
 import { FaTrashAlt, FaCloudUploadAlt } from "react-icons/fa";
@@ -11,6 +10,7 @@ import {
   updateToSellerResubmit,
   convertURLToFile,
 } from "../services/CustomerService/CustomerService";
+import { useNavigate } from "react-router-dom";
 
 const EditRoleUpdated = () => {
   const { accountID } = useParams();
@@ -26,6 +26,7 @@ const EditRoleUpdated = () => {
   const [idCardNumber, setIdCardNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [accountProfile, setAccountProfileData] = useState({});
+  const navigate = useNavigate();
 
   // State lưu lỗi cho từng trường
   const [errors, setErrors] = useState({
@@ -56,7 +57,7 @@ const EditRoleUpdated = () => {
             "frontIdcard.jpg"
           );
 
-           // Gọi hàm xử lý file ảnh mặt trước để lấy số CCCD và ngày sinh
+          // Gọi hàm xử lý file ảnh mặt trước để lấy số CCCD và ngày sinh
           handlefrontIDCardFileChange({ target: { files: [file] } });
         }
       } catch (error) {
@@ -143,7 +144,6 @@ const EditRoleUpdated = () => {
     formData.append("dateOfBirth", dateOfBirth.toISOString().split("T")[0]);
     formData.append("iDCardNumber", idCardNumber);
 
-
     try {
       setIsLoading(true);
 
@@ -154,6 +154,7 @@ const EditRoleUpdated = () => {
         title: "Thành công!",
         text: "Thông tin tài khoản đã được thêm thành công.",
       });
+      navigate(-1);
     } catch (error) {
       console.error(error);
       setIsLoading(false);
@@ -257,12 +258,12 @@ const EditRoleUpdated = () => {
       });
   };
 
-  // Handle delete for each image
+  // Xóa ảnh
   const handleDeleteImage = (field, setFile, setPreview) => {
     setFile(null);
     setPreview(null);
     setErrors((prevErrors) => ({ ...prevErrors, [field]: "" }));
-    if(field ==="frontIDCard") {
+    if (field === "frontIDCard") {
       setIdCardNumber("");
       setDateOfBirth(null);
     }
@@ -279,43 +280,36 @@ const EditRoleUpdated = () => {
         triển không giới hạn!
       </p>
       <Form>
-        {/* Front ID Card */}
         <Row className="mb-6">
-          <Col>
+          {/* Ảnh căn cước mặt trước */}
+          <Col md={6}>
             <Form.Group controlId="frontIDCard">
               <Form.Label className="text-lg">
                 Ảnh căn cước mặt trước
               </Form.Label>
-
-              {/* Hidden file input */}
-              <input
-                type="file"
-                name="frontIDCard"
-                id="frontIDCard"
-                onChange={handlefrontIDCardFileChange}
-                disabled={isLoading}
-                className="hidden"
-                accept="image/*"
-              />
-
-              {/* Cloud icon trigger with flexbox centering */}
-              <div
-                onClick={() => document.getElementById("frontIDCard").click()}
-                className="cursor-pointer flex flex-col items-center justify-center p-4 border border-gray-300 rounded-md hover:bg-gray-100"
-              >
-                {/* Cloud Icon */}
-                <FaCloudUploadAlt className="text-4xl text-gray-600 mb-2" />
-                {/* Text below the icon */}
-                <p className="text-gray-600">Chọn ảnh</p>
-              </div>
-
               {errors.frontIDCard && (
-                <Form.Text className="text-red-500">
-                  {errors.frontIDCard}
-                </Form.Text>
+                <div className="text-red-600 mb-2">{errors.frontIDCard}</div>
               )}
-
-              {/* Image preview */}
+              {!frontIDCardPreview && (
+                <>
+                  <input
+                    type="file"
+                    id="frontIDCard"
+                    onChange={handlefrontIDCardFileChange}
+                    className="hidden"
+                    accept="image/*"
+                  />
+                  <div
+                    onClick={() =>
+                      document.getElementById("frontIDCard").click()
+                    }
+                    className="cursor-pointer flex flex-col items-center justify-center p-4 border border-gray-300 rounded-md hover:bg-gray-100"
+                  >
+                    <FaCloudUploadAlt className="text-4xl text-gray-600 mb-2" />
+                    <p className="text-gray-600">Chọn ảnh</p>
+                  </div>
+                </>
+              )}
               {frontIDCardPreview && (
                 <div className="mt-2">
                   <img
@@ -333,7 +327,7 @@ const EditRoleUpdated = () => {
                       )
                     }
                     disabled={isLoading}
-                    className="mt-2 inline-flex items-center bg-red-500 text-white hover:bg-red-600 py-2 px-4 rounded-md"
+                    className="mt-2 inline-flex items-center bg-red-500 text-white py-2 px-4 rounded-md"
                   >
                     <FaTrashAlt className="mr-2" /> Xóa ảnh
                   </Button>
@@ -341,73 +335,37 @@ const EditRoleUpdated = () => {
               )}
             </Form.Group>
           </Col>
-        </Row>
-        {/* Birthday and ID Card Number */}
-        <Row className="mb-4">
-          <Form.Label>Số căn cước công dân</Form.Label>
-          <Form.Control
-            type="text"
-            value={idCardNumber}
-            onChange={(e) => setIdCardNumber(e.target.value)}
-            disabled={true}
-            isInvalid={!!errors.idCardNumber}
-          />
-          {errors.idCardNumber && (
-            <Form.Text className="text-danger">{errors.idCardNumber}</Form.Text>
-          )}
-        </Row>
 
-        <Row className="mb-4">
-          <Form.Label>Ngày sinh</Form.Label>
-          <DatePicker
-            selected={dateOfBirth}
-            onChange={(date) => setDateOfBirth(date)}
-            dateFormat="dd/MM/yyyy"
-            disabled={true}
-            className="form-control"
-          />
-          {errors.dateOfBirth && (
-            <Form.Text className="text-danger">{errors.dateOfBirth}</Form.Text>
-          )}
-        </Row>
-
-        {/* Back ID Card */}
-        <Row className="mb-6">
-          <Col>
+          {/* Ảnh căn cước mặt sau */}
+          <Col md={6}>
             <Form.Group controlId="backIDCard">
               <Form.Label className="text-lg">Ảnh căn cước mặt sau</Form.Label>
-
-              {/* Hidden file input */}
-              <input
-                type="file"
-                name="backIDCard"
-                id="backIDCard"
-                onChange={(e) =>
-                  handleFileChange(e, setBackIDCard, setBackIDCardPreview)
-                }
-                disabled={isLoading}
-                className="hidden"
-                accept="image/*"
-              />
-
-              {/* Cloud icon trigger with flexbox centering */}
-              <div
-                onClick={() => document.getElementById("backIDCard").click()}
-                className="cursor-pointer flex flex-col items-center justify-center p-4 border border-gray-300 rounded-md hover:bg-gray-100"
-              >
-                {/* Cloud Icon */}
-                <FaCloudUploadAlt className="text-4xl text-gray-600 mb-2" />
-                {/* Text below the icon */}
-                <p className="text-gray-600">Chọn ảnh</p>
-              </div>
-
               {errors.backIDCard && (
-                <Form.Text className="text-red-500">
-                  {errors.backIDCard}
-                </Form.Text>
+                <div className="text-red-600 mb-2">{errors.backIDCard}</div>
               )}
-
-              {/* Image preview */}
+              {!backIDCardPreview && (
+                <>
+                  <input
+                    type="file"
+                    id="backIDCard"
+                    onChange={(e) =>
+                      handleFileChange(e, setBackIDCard, setBackIDCardPreview)
+                    }
+                    disabled={isLoading}
+                    className="hidden"
+                    accept="image/*"
+                  />
+                  <div
+                    onClick={() =>
+                      document.getElementById("backIDCard").click()
+                    }
+                    className="cursor-pointer flex flex-col items-center justify-center p-4 border border-gray-300 rounded-md hover:bg-gray-100"
+                  >
+                    <FaCloudUploadAlt className="text-4xl text-gray-600 mb-2" />
+                    <p className="text-gray-600">Chọn ảnh</p>
+                  </div>
+                </>
+              )}
               {backIDCardPreview && (
                 <div className="mt-2">
                   <img
@@ -425,7 +383,7 @@ const EditRoleUpdated = () => {
                       )
                     }
                     disabled={isLoading}
-                    className="mt-2 inline-flex items-center bg-red-500 text-white hover:bg-red-600 py-2 px-4 rounded-md"
+                    className="mt-2 inline-flex items-center bg-red-500 text-white py-2 px-4 rounded-md"
                   >
                     <FaTrashAlt className="mr-2" /> Xóa ảnh
                   </Button>
@@ -435,43 +393,77 @@ const EditRoleUpdated = () => {
           </Col>
         </Row>
 
-        {/* Portrait Image */}
+        <Row className="mb-4">
+          {/* Số căn cước công dân */}
+          <Col md={6}>
+            <Form.Label>Số căn cước công dân</Form.Label>
+            <Form.Control
+              type="text"
+              value={idCardNumber}
+              onChange={(e) => setIdCardNumber(e.target.value)}
+              disabled={true}
+              isInvalid={!!errors.idCardNumber}
+            />
+            {errors.idCardNumber && (
+              <Form.Text className="text-danger">
+                {errors.idCardNumber}
+              </Form.Text>
+            )}
+          </Col>
+
+          {/* Ngày sinh */}
+          <Col md={6}>
+            <Form.Label>Ngày sinh</Form.Label>
+            <Form.Control
+              type="text"
+              value={
+                dateOfBirth
+                  ? new Date(dateOfBirth).toLocaleDateString("en-GB")
+                  : ""
+              }
+              onChange={(e) => setDateOfBirth(e.target.value)}
+              disabled={true}
+              placeholder="dd/MM/yyyy"
+              isInvalid={!!errors.dateOfBirth}
+            />
+            {errors.dateOfBirth && (
+              <Form.Text className="text-danger">
+                {errors.dateOfBirth}
+              </Form.Text>
+            )}
+          </Col>
+        </Row>
+
         <Row className="mb-6">
-          <Col>
+          {/* Ảnh chân dung */}
+          <Col md={6}>
             <Form.Group controlId="portrait">
               <Form.Label className="text-lg">Ảnh chân dung</Form.Label>
-
-              {/* Hidden file input */}
-              <input
-                type="file"
-                name="portrait"
-                id="portrait"
-                onChange={(e) =>
-                  handleFileChange(e, setPortrait, setPortraitPreview)
-                }
-                disabled={isLoading}
-                className="hidden"
-                accept="image/*"
-              />
-
-              {/* Cloud icon trigger with flexbox centering */}
-              <div
-                onClick={() => document.getElementById("portrait").click()}
-                className="cursor-pointer flex flex-col items-center justify-center p-4 border border-gray-300 rounded-md hover:bg-gray-100"
-              >
-                {/* Cloud Icon */}
-                <FaCloudUploadAlt className="text-4xl text-gray-600 mb-2" />
-                {/* Text below the icon */}
-                <p className="text-gray-600">Chọn ảnh</p>
-              </div>
-
               {errors.portrait && (
-                <Form.Text className="text-red-500">
-                  {errors.portrait}
-                </Form.Text>
+                <div className="text-red-600 mb-2">{errors.portrait}</div>
               )}
-
-              {/* Image preview */}
+              {!portraitPreview && (
+                <>
+                  <input
+                    type="file"
+                    name="portrait"
+                    id="portrait"
+                    onChange={(e) =>
+                      handleFileChange(e, setPortrait, setPortraitPreview)
+                    }
+                    disabled={isLoading}
+                    className="hidden"
+                    accept="image/*"
+                  />
+                  <div
+                    onClick={() => document.getElementById("portrait").click()}
+                    className="cursor-pointer flex flex-col items-center justify-center p-4 border border-gray-300 rounded-md hover:bg-gray-100"
+                  >
+                    <FaCloudUploadAlt className="text-4xl text-gray-600 mb-2" />
+                    <p className="text-gray-600">Chọn ảnh</p>
+                  </div>
+                </>
+              )}
               {portraitPreview && (
                 <div className="mt-2">
                   <img
@@ -497,47 +489,44 @@ const EditRoleUpdated = () => {
               )}
             </Form.Group>
           </Col>
-        </Row>
 
-        {/* Bank Account QR Code */}
-        <Row className="mb-6">
-          <Col>
+          {/* Ảnh mã QR ngân hàng */}
+          <Col md={6}>
             <Form.Group controlId="bankAccountQR">
               <Form.Label className="text-lg">
                 Mã QR tài khoản ngân hàng
               </Form.Label>
-
-              {/* Hidden file input */}
-              <input
-                type="file"
-                name="bankAccountQR"
-                id="bankAccountQR"
-                onChange={(e) =>
-                  handleFileChange(e, setBankAccountQR, setBankAccountQRPreview)
-                }
-                disabled={isLoading}
-                className="hidden"
-                accept="image/*"
-              />
-
-              {/* Cloud icon trigger with flexbox centering */}
-              <div
-                onClick={() => document.getElementById("bankAccountQR").click()}
-                className="cursor-pointer flex flex-col items-center justify-center p-4 border border-gray-300 rounded-md hover:bg-gray-100"
-              >
-                {/* Cloud Icon */}
-                <FaCloudUploadAlt className="text-4xl text-gray-600 mb-2" />
-                {/* Text below the icon */}
-                <p className="text-gray-600">Chọn mã QR</p>
-              </div>
-
               {errors.bankAccountQR && (
-                <Form.Text className="text-red-500">
-                  {errors.bankAccountQR}
-                </Form.Text>
+                <div className="text-red-600 mb-2">{errors.bankAccountQR}</div>
               )}
-
-              {/* Image preview */}
+              {!bankAccountQRPreview && (
+                <>
+                  <input
+                    type="file"
+                    name="bankAccountQR"
+                    id="bankAccountQR"
+                    onChange={(e) =>
+                      handleFileChange(
+                        e,
+                        setBankAccountQR,
+                        setBankAccountQRPreview
+                      )
+                    }
+                    disabled={isLoading}
+                    className="hidden"
+                    accept="image/*"
+                  />
+                  <div
+                    onClick={() =>
+                      document.getElementById("bankAccountQR").click()
+                    }
+                    className="cursor-pointer flex flex-col items-center justify-center p-4 border border-gray-300 rounded-md hover:bg-gray-100"
+                  >
+                    <FaCloudUploadAlt className="text-4xl text-gray-600 mb-2" />
+                    <p className="text-gray-600">Chọn mã QR</p>
+                  </div>
+                </>
+              )}
               {bankAccountQRPreview && (
                 <div className="mt-2">
                   <img
@@ -566,7 +555,7 @@ const EditRoleUpdated = () => {
         </Row>
 
         {/* Save Button */}
-        <div className="d-flex justify-content-end mt-4">
+        <div className="d-flex justify-content-center mt-4">
           <Button
             variant="primary"
             onClick={handleSaveAccountProfile}
@@ -574,6 +563,14 @@ const EditRoleUpdated = () => {
             className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-300 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 disabled:opacity-50"
           >
             {isLoading ? <span>Đang gửi...</span> : <span>Gửi thông tin</span>}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => navigate(-1)} // Quay lại trang trước
+            disabled={isLoading}
+            className="ms-3 px-8 py-3 bg-gray-300 text-gray-700 hover:bg-gray-400 focus:outline-none focus:ring-4 focus:ring-gray-300 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105"
+          >
+            Quay lại
           </Button>
         </div>
       </Form>
