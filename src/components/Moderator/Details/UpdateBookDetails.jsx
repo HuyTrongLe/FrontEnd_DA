@@ -206,7 +206,7 @@ const BookDetail = () => {
             <button
               onClick={() => {
                 const statusText = status === 1 ? "Xác nhận" : "Khóa";
-                if(censorNote){
+                if(!censorNote){
                   handleNotification(
                     `Mod ${accountOnline} đã ${statusText} sách ${book.bookName} của bạn`
                   );

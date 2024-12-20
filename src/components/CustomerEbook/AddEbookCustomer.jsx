@@ -33,6 +33,9 @@ const EbookCustomer = () => {
   // Add this to your state management
   const [pdfPreview, setPdfPreview] = useState(null);
 
+  // Add state to track form submission attempt
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
   // Fetch categories from the API
   useEffect(() => {
     const fetchCategories = async () => {
@@ -220,85 +223,83 @@ const EbookCustomer = () => {
   // Handle form submission to add ebook
   const addEbook = async (e) => {
     e.preventDefault();
+    setIsSubmitted(true);
 
-    // Check for missing fields
-    const missingFields = [];
-
-    if (!newEbook.EbookName) missingFields.push("Tên Ebook");
-    if (!newEbook.Description) missingFields.push("Mô tả");
-    if (newEbook.Price === null || newEbook.Price === undefined)
-      missingFields.push("Giá");
-    if (!newEbook.image) missingFields.push("Hình ảnh");
-    if (!newEbook.Pdf) missingFields.push("Tài liệu PDF");
-    if (!newEbook.categoryId) missingFields.push("Danh mục"); // Check if category is selected
-    if (!newEbook.Author) missingFields.push("Tác giả"); // Add this line
-
-    // Ensure the user is logged in and UserId is available
-    if (!UserId) {
-      missingFields.push("Người dùng chưa đăng nhập hoặc thiếu UserId");
-    }
-
-    if (missingFields.length > 0) {
+    // Check each field before submission
+    if (!newEbook.EbookName?.trim()) {
       Swal.fire({
-        icon: "error",
-        title: "Thiếu trường thông tin",
-        text: `Vui lòng điền đầy đủ các trường yêu cầu: ${missingFields.join(
-          ", "
-        )}`,
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng nhập tên sách điện tử'
       });
       return;
     }
 
-    // Log the price before appending
-    console.log("Price before appending:", newEbook.Price);
-
-    // Prepare FormData to send the file along with other fields
-    const ebookData = new FormData();
-
-    // Append form fields
-    ebookData.append("ebookName", newEbook.EbookName);
-    ebookData.append("description", newEbook.Description);
-
-    // Ensure the price is correctly parsed
-    const priceValue = newEbook.Price ? parseFloat(newEbook.Price.replace(/,/g, '')) : 0;
-    console.log("Parsed price value:", priceValue);
-    ebookData.append("price", priceValue);
-
-    // Append the selected category
-    ebookData.append("categoryId", newEbook.categoryId);
-
-    // Append UserId as createById
-    ebookData.append("createById", UserId); // Use UserId
-
-    // Append the status, if required
-    ebookData.append("status", newEbook.Status || 1);
-
-    // Append author
-    ebookData.append("author", newEbook.Author);
-
-    // Append image if provided
-    if (newEbook.image) {
-      ebookData.append("image", newEbook.image);
+    if (!newEbook.Author?.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng nhập tên tác giả'
+      });
+      return;
     }
 
-    // Append PDF file if provided
-    if (newEbook.Pdf) {
-      ebookData.append("document", newEbook.Pdf);
+    if (!newEbook.Description?.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng nhập mô tả sách'
+      });
+      return;
     }
 
-    // Log the FormData being sent to the server
-    console.log("FormData being sent to the API:", ebookData);
+    if (!newEbook.Price || parseFloat(newEbook.Price.replace(/,/g, '')) <= 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng nhập giá hợp lệ'
+      });
+      return;
+    }
 
+    if (!newEbook.categoryId) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng chọn danh mục'
+      });
+      return;
+    }
+
+    if (!newEbook.image) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng tải lên ảnh bìa sách'
+      });
+      return;
+    }
+
+    if (!newEbook.Pdf) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng tải lên file PDF của sách'
+      });
+      return;
+    }
+
+    // If all validations pass, continue with form submission
     try {
-      // Show the loading progress alert without OK button
+      // Show the loading progress alert
       let timerInterval;
       Swal.fire({
         title: 'Đang tải lên...',
         html: 'Đang xử lý tập tin PDF',
         timer: 0,
         timerProgressBar: true,
-        showConfirmButton: false, // Remove OK button
-        allowOutsideClick: false, // Prevent clicking outside
+        showConfirmButton: false,
+        allowOutsideClick: false,
         didOpen: () => {
           Swal.showLoading();
         },
@@ -306,6 +307,46 @@ const EbookCustomer = () => {
           clearInterval(timerInterval);
         }
       });
+
+      // Log the price before appending
+      console.log("Price before appending:", newEbook.Price);
+
+      // Prepare FormData to send the file along with other fields
+      const ebookData = new FormData();
+
+      // Append form fields
+      ebookData.append("ebookName", newEbook.EbookName);
+      ebookData.append("description", newEbook.Description);
+
+      // Ensure the price is correctly parsed
+      const priceValue = newEbook.Price ? parseFloat(newEbook.Price.replace(/,/g, '')) : 0;
+      console.log("Parsed price value:", priceValue);
+      ebookData.append("price", priceValue);
+
+      // Append the selected category
+      ebookData.append("categoryId", newEbook.categoryId);
+
+      // Append UserId as createById
+      ebookData.append("createById", UserId); // Use UserId
+
+      // Append the status, if required
+      ebookData.append("status", newEbook.Status || 1);
+
+      // Append author
+      ebookData.append("author", newEbook.Author);
+
+      // Append image if provided
+      if (newEbook.image) {
+        ebookData.append("image", newEbook.image);
+      }
+
+      // Append PDF file if provided
+      if (newEbook.Pdf) {
+        ebookData.append("document", newEbook.Pdf);
+      }
+
+      // Log the FormData being sent to the server
+      console.log("FormData being sent to the API:", ebookData);
 
       // Send request to the API
       const response = await axios.post(
@@ -393,6 +434,13 @@ const EbookCustomer = () => {
     setPdfPreview(null);
   };
 
+  // Update the input class to only show red border after submission
+  const inputClass = `peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
+                     focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
+                     transition-all duration-200 outline-none
+                     placeholder-transparent
+                     ${isSubmitted ? 'invalid:border-red-500 invalid:focus:border-red-500' : ''}`;
+
   return (
     <div className="min-h-screen py-8">
       <Container className="my-8 px-4 max-w-4xl mx-auto relative overflow-hidden">
@@ -425,10 +473,8 @@ const EbookCustomer = () => {
                     setNewEbook({ ...newEbook, EbookName: e.target.value })
                   }
                   required
-                  className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
-                            focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                            transition-all duration-200 outline-none
-                            placeholder-transparent"
+                  minLength={1}
+                  className={inputClass}
                   placeholder="Tên sách điện tử"
                 />
                 <Form.Label
@@ -457,10 +503,7 @@ const EbookCustomer = () => {
                     setNewEbook({ ...newEbook, Author: e.target.value })
                   }
                   required
-                  className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
-                            focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                            transition-all duration-200 outline-none
-                            placeholder-transparent"
+                  className={inputClass}
                   placeholder="Tác giả"
                 />
                 <Form.Label
@@ -490,10 +533,7 @@ const EbookCustomer = () => {
                   setNewEbook({ ...newEbook, Description: e.target.value })
                 }
                 required
-                className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
-                          focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                          transition-all duration-200 outline-none
-                          placeholder-transparent"
+                className={inputClass}
                 placeholder="Mô tả"
               />
               <Form.Label
@@ -521,10 +561,7 @@ const EbookCustomer = () => {
                   value={newEbook.Price}
                   onChange={handlePriceChange}
                   required
-                  className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
-                            focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                            transition-all duration-200 outline-none
-                            placeholder-transparent"
+                  className={inputClass}
                   placeholder="Giá"
                 />
                 <Form.Label
@@ -554,10 +591,7 @@ const EbookCustomer = () => {
                     categoryId: e.target.value
                   }))}
                   required
-                  className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
-                            focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                            transition-all duration-200 outline-none
-                            appearance-none"
+                  className={inputClass}
                 >
                   <option value="">Select Category</option>
                   {categories.map((category) => (

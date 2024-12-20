@@ -39,6 +39,7 @@ const AddBook = () => {
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   // Fetch categories and addresses on component mount
   useEffect(() => {
@@ -218,57 +219,109 @@ const AddBook = () => {
   // Form handling functions
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    const safeTrim = (value) => value?.trim() || '';
-    const safeNumber = (value) => Number(value) || 0;
+    setIsSubmitted(true);
 
-    const bookData = {
-      bookName: safeTrim(book.bookName),
-      description: safeTrim(book.description),
-      author: safeTrim(book.author),
-      price: safeNumber(book.price?.replace(/[,\.]/g, '')),
-      unitInStock: safeNumber(book.unitInStock),
-      categoryId: safeNumber(book.categoryId),
-      isbn: safeTrim(book.isbn),
-      weight: safeNumber(book.weight),
-      length: safeNumber(book.length),
-      width: safeNumber(book.width),
-      height: safeNumber(book.height),
-      senderAddressId: safeNumber(book.senderAddressId)
-    };
-
-    const requiredFields = {
-      bookName: 'Tên sách',
-      author: 'Tên tác giả',
-      description: 'Mô tả',
-      price: 'Giá',
-      categoryId: 'Danh mục',
-      senderAddressId: 'Địa chỉ gi',
-      isbn: 'ISBN'
-    };
-
-    const missingFields = Object.entries(requiredFields)
-      .filter(([key, label]) => !bookData[key])
-      .map(([_, label]) => label);
-
-    if (missingFields.length > 0) {
+    // Check each field before submission
+    if (!book.bookName?.trim()) {
       Swal.fire({
-        icon: 'error',
-        title: 'Lỗi',
-        text: `Vui lòng điền vào các trường bắt buộc sau: ${missingFields.join(', ')}`
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng nhập tên sách'
       });
       return;
     }
 
-    if (!selectedAddress || !book.senderAddressId) {
+    if (!book.author?.trim()) {
       Swal.fire({
-        icon: 'error',
-        title: 'Lỗi',
-        text: 'Vui lòng chọn địa chỉ gi'
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng nhập tên tác giả'
       });
       return;
     }
 
+    if (!book.description?.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng nhập mô tả sách'
+      });
+      return;
+    }
+
+    if (!book.price || parseFloat(book.price.replace(/,/g, '')) <= 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng nhập giá hợp lệ'
+      });
+      return;
+    }
+
+    if (!book.categoryId) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng chọn danh mục'
+      });
+      return;
+    }
+
+    if (!book.isbn?.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin', 
+        text: 'Vui lòng nhập mã ISBN'
+      });
+      return;
+    }
+
+    if (!book.weight || parseFloat(book.weight) <= 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng nhập cân nặng hợp lệ'
+      });
+      return;
+    }
+
+    if (!book.length || parseFloat(book.length) <= 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng nhập chiều dài hợp lệ'
+      });
+      return;
+    }
+
+    if (!book.width || parseFloat(book.width) <= 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng nhập chiều rộng hợp lệ'
+      });
+      return;
+    }
+
+    if (!book.height || parseFloat(book.height) <= 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng nhập chiều cao hợp lệ'
+      });
+      return;
+    }
+
+    if (!book.senderAddressId) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng chọn địa chỉ gửi hàng'
+      });
+      return;
+    }
+
+    // If all validations pass, continue with form submission
     setIsBookFormVisible(false);
   };
 
@@ -809,6 +862,13 @@ const AddBook = () => {
     }));
   };
 
+  // Update the input field classes to only show red when submitted and invalid
+  const inputClass = `peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
+                     focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
+                     transition-all duration-200 outline-none
+                     placeholder-transparent
+                     ${isSubmitted ? 'invalid:border-red-500 invalid:focus:border-red-500' : ''}`;
+
   return (
     <div className="min-h-screen py-8">
       <Container className="my-8 px-4 max-w-4xl mx-auto relative overflow-hidden">
@@ -846,16 +906,14 @@ const AddBook = () => {
                       <Form.Control
                         type="text"
                         id="bookName"
-                        value={book.bookName || ''}
+                        value={book.bookName}
                         onChange={(e) => setBook(prev => ({
                           ...prev,
                           bookName: e.target.value
                         }))}
                         required
-                        className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
-                                  focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
-                                  transition-all duration-200 outline-none
-                                  placeholder-transparent"
+                        minLength={1}
+                        className={inputClass}
                         placeholder="Tên Sách"
                       />
                       <Form.Label
@@ -879,16 +937,14 @@ const AddBook = () => {
                       <Form.Control
                         type="text"
                         id="author"
-                        value={book.author || ''}
+                        value={book.author}
                         onChange={(e) => setBook(prev => ({
                           ...prev,
                           author: e.target.value
                         }))}
                         required
-                        className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
-                                  focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
-                                  transition-all duration-200 outline-none
-                                  placeholder-transparent"
+                        minLength={1}
+                        className={inputClass}
                         placeholder="Tên Tác Giả"
                       />
                       <Form.Label
@@ -914,7 +970,7 @@ const AddBook = () => {
                     <Form.Select
                       id="categoryId"
                       name="categoryId"
-                      value={book.categoryId || ''}
+                      value={book.categoryId}
                       onChange={(e) => setBook(prev => ({
                         ...prev,
                         categoryId: e.target.value
@@ -946,7 +1002,7 @@ const AddBook = () => {
                       as="textarea"
                       id="description"
                       name="description"
-                      value={book.description || ''}
+                      value={book.description}
                       onChange={(e) => setBook(prev => ({
                         ...prev,
                         description: e.target.value
@@ -982,7 +1038,7 @@ const AddBook = () => {
                         type="text"
                         id="price"
                         name="price"
-                        value={book.price || ''}
+                        value={book.price}
                         onChange={handlePriceChange}
                         required
                         className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
@@ -1013,7 +1069,7 @@ const AddBook = () => {
                         type="number"
                         id="unitInStock"
                         name="unitInStock"
-                        value={book.unitInStock || '1'}
+                        value={book.unitInStock}
                         onChange={(e) => setBook(prev => ({
                           ...prev,
                           unitInStock: e.target.value
@@ -1047,7 +1103,7 @@ const AddBook = () => {
                       <Form.Control
                         type="text"
                         id="weight"
-                        value={book.weight || ''}
+                        value={book.weight}
                         onChange={handleWeightChange}
                         required
                         className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
@@ -1080,7 +1136,7 @@ const AddBook = () => {
                       <Form.Control
                         type="text"
                         id="length"
-                        value={book.length || ''}
+                        value={book.length}
                         onChange={handleLengthChange}
                         required
                         className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
@@ -1113,7 +1169,7 @@ const AddBook = () => {
                       <Form.Control
                         type="text"
                         id="width"
-                        value={book.width || ''}
+                        value={book.width}
                         onChange={handleWidthChange}
                         required
                         className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
@@ -1146,7 +1202,7 @@ const AddBook = () => {
                       <Form.Control
                         type="text"
                         id="height"
-                        value={book.height || ''}
+                        value={book.height}
                         onChange={handleHeightChange}
                         required
                         className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
@@ -1182,7 +1238,7 @@ const AddBook = () => {
                       type="text"
                       id="isbn"
                       name="isbn"
-                      value={book.isbn || ''}
+                      value={book.isbn}
                       onChange={(e) => setBook(prev => ({
                         ...prev,
                         isbn: e.target.value

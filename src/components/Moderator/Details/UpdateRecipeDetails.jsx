@@ -208,7 +208,7 @@ const RecipeDetail = () => {
               <p className="text-lg mb-2">
                 <strong className="text-gray-800">Ngày tạo:</strong>{" "}
                 {recipe?.createDate
-                  ? new Date(recipe.createDate).toLocaleDateString("vi-VN") // Định dạng ngày theo chuẩn Việt Nam
+                  ? new Date(recipe.createDate).toLocaleDateString("vi-VN")
                   : "N/A"}
               </p>
             </div>
@@ -312,7 +312,7 @@ const RecipeDetail = () => {
             <button
               onClick={() => {
                 const statusText = status === 1 ? "Xác nhận" : "Khóa";
-                if(censorNote){
+                if(!censorNote){
                   handleNotification(
                     `Mod ${accountOnline} đã ${statusText} công thức ${recipe.recipeName} của bạn`
                   );

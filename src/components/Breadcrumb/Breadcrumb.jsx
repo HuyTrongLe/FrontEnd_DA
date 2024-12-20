@@ -48,6 +48,7 @@ const Breadcrumb = () => {
     // Người dùng và cập nhật thông tin
     "update-information": { name: "Thông Tin Cá Nhân", link: "/update-information" },
     "update-to-seller": { name: "Đăng Kí Bán Hàng", link: "/update-to-seller" },
+    "update-profile": {name: "Thông Tin Đăng Kí Bán Hàng", link: "/form-updated-role"},
     "form-updated-role": { name: "Thông Tin Đăng Kí Bán Hàng", link: "/form-updated-role" },
     "form updated-role": { name: "Thông Tin Đã Yêu Cầu", link: "/form-updated-role" },
     "recipecustomer-detail" : { name: "Công Thức Đã Lưu", link: "/list-saved-recipe"},

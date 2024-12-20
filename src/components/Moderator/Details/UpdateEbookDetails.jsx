@@ -216,7 +216,7 @@ function EbookDetail() {
                 <button
                   onClick={() => {
                     const statusText = status === 1 ? "Xác nhận" : "Khóa";
-                    if(censorNote){
+                    if(!censorNote){
                       handleNotification(
                         `Mod ${accountOnline} đã ${statusText} sách điện tử ${ebook.ebookName} của bạn`
                       );
