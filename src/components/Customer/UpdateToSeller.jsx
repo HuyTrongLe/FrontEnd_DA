@@ -135,6 +135,10 @@ const UpdateToSeller = () => {
         icon: "success",
         title: "Thành công!",
         text: "Thông tin tài khoản đã được thêm thành công.",
+      }).then(()=>{
+        handleNotification(
+          `${accountOnline} đã gửi thông tin đăng kí bán hàng về hệ thống`
+        );
       });
     } catch (error) {
       if (error.response && error.response.data) {
@@ -579,9 +583,6 @@ const UpdateToSeller = () => {
           <Button
             variant="primary"
             onClick={() => {
-              handleNotification(
-                `${accountOnline} đã gửi thông tin đăng kí bán hàng về hệ thống`
-              );
               handleSaveAccountProfile();
             }}
             disabled={isLoading}
