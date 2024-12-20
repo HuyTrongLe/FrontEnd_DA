@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import Cookies from 'js-cookie';
 import { getAccountById } from '../../services/AccountService';
@@ -44,9 +44,7 @@ const WithDrawRequest = () => {
         fetchData();
     }, []);
 
-    const handleSubmit = async (event) => {
-
-        event.preventDefault();
+    const handleWithdraw = async () => {
         if (amount > account.coin) {
             setError('Số xu muốn rút không được vượt quá số xu hiện có: ' + account.coin);
         } else if (Math.round(amount * conversionRate) < 50000) {
@@ -93,6 +91,22 @@ const WithDrawRequest = () => {
             }
             setError(null);
         }
+    }
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        Swal.fire({
+            title: 'Xác nhận',
+            text: 'Bạn chắc chắn đã kiểm tra đẩy đủ thông tin?',
+            icon: 'warning',
+            showCancelButton: true,
+            cancelButtonText: 'Hủy',
+            confirmButtonText: 'Xác nhận',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                handleWithdraw();
+            }
+        });
     };
 
 
@@ -106,7 +120,7 @@ const WithDrawRequest = () => {
                             <div className="card-body">
                                 <h5 className="card-title mb-4"><strong>Thông tin tài khoản: </strong></h5>
                                 <p className="card-text font-medium text-xl mb-2">Tên của bạn: <span className='italic font-bold'>{account.userName}</span></p>
-                                <p className="card-text font-medium text-xl mb-3    ">Email: <span className='italic font-bold'>{account.email}</span></p>
+                                <p className="card-text font-medium text-xl mb-3">Email: <span className='italic font-bold'>{account.email}</span></p>
                                 <p className="card-text font-medium text-xl">Mã QR tài khoản ngân hàng:
                                     <img className='mt-4 mx-auto' src={bankAccountQR} alt="QR" />
                                 </p>
@@ -137,7 +151,7 @@ const WithDrawRequest = () => {
                                     </span> Tiền nhận được = <span className='text-2xl text-green-500'>{Math.round(amount * conversionRate)}₫</span></p>
                                     {status !== 2 ? (
                                         <button type="submit" className="btn btn-success mt-12 flex p-2 font-semibold text-2xl"><span className="material-icons">
-                                        attach_money</span>Gửi Yêu Cầu</button>
+                                            attach_money</span>Gửi Yêu Cầu</button>
                                     ) : (
                                         <p className="text-red-600">Bạn có thông tin chưa cập nhật hoàn tất hoặc chưa được duyệt</p>
                                     )}

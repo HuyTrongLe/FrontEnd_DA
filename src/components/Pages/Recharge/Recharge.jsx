@@ -8,10 +8,10 @@ const RechargePage = () => {
   const conversionRate = 0.85;
   const coinOptions = [
     { coins: 5000, price: 5000 },
-    { coins: 10000, price: 10000  },
-    { coins: 25000, price: 25000  },
-    { coins: 50000, price: 50000  },
-    { coins: 75000, price: 75000  },
+    { coins: 10000, price: 10000 },
+    { coins: 25000, price: 25000 },
+    { coins: 50000, price: 50000 },
+    { coins: 75000, price: 75000 },
     { coins: 100000, price: 100000 * conversionRate },
     { coins: 450000, price: 450000 * conversionRate },
   ];
@@ -26,7 +26,6 @@ const RechargePage = () => {
   const [customCoins, setCustomCoins] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('PayOS'); // Lưu phương thức thanh toán
   const [userAvatar, setUserAvatar] = useState('');
-  const [eror, setError] = useState('');
 
 
 
@@ -35,6 +34,8 @@ const RechargePage = () => {
   const handleGetPaymentLink = async (coin, userId, total) => {
     setIsLoading(true);
     const url = `https://rmrbdapi.somee.com/odata/Payment/${userId}/${total}`;
+    console.log("userID", userId)
+    console.log("total:", total)
     try {
       const response = await fetch(url, {
         method: 'GET',
@@ -105,8 +106,8 @@ const RechargePage = () => {
     const value = e.target.value;
     if (/^\d*$/.test(value)) { // Kiểm tra chỉ cho phép nhập số
       setCustomCoins(value);
-      if(value < 5000){
-       setTotal(0)
+      if (value < 5000) {
+        setTotal(0)
       }
       else if (value < 100000 && value >= 5000) {
         setTotal(value);
@@ -132,7 +133,7 @@ const RechargePage = () => {
             />
             <div>
               <p className="font-bold text-lg text-gray-800">{userName}</p>
-              <p className="text-lg text-gray-800 font-semibold"><img src="images/icon/dollar.png" alt="" className='h-6 w-6 mb-1 inline-block'/> {Intl.NumberFormat('de-DE').format(coin)}</p>
+              <p className="text-lg text-gray-800 font-semibold"><img src="images/icon/dollar.png" alt="" className='h-6 w-6 mb-1 inline-block' /> {Intl.NumberFormat('de-DE').format(coin)}</p>
             </div>
           </div>
           <a href="/coinTransaction" className="text-gray-900 font-bold cursor-pointer">
@@ -153,7 +154,7 @@ const RechargePage = () => {
                 } cursor-pointer`}
               onClick={() => handleSelect(option)}
             >
-              <div className="font-bold text-gray-900 text-xl text-center mb-1"><img src="images/icon/dollar.png" alt="" className='h-6 w-6 inline-block'/> {Intl.NumberFormat('de-DE').format(option.coins)}</div>
+              <div className="font-bold text-gray-900 text-xl text-center mb-1"><img src="images/icon/dollar.png" alt="" className='h-6 w-6 inline-block' /> {Intl.NumberFormat('de-DE').format(option.coins)}</div>
               <div className="text-gray-600 text-sm text-center">
                 {typeof option.price === 'number' ? `₫${option.price.toLocaleString()}` : option.price}
               </div>
@@ -253,7 +254,7 @@ const RechargePage = () => {
           </div>
         )}
       </div>
-      </section>
+    </section>
   );
 };
 

@@ -594,7 +594,7 @@ const CategoryManagement = () => {
                         </tr>
                       )) : (
                         <tr key="no-tags">
-                          <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">Không có thẻ n��o</td>
+                          <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">Không có thẻ nào</td>
                         </tr>
                       )}
                     </tbody>

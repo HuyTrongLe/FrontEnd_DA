@@ -62,7 +62,9 @@ const Breadcrumb = () => {
     // Các trang khác
     faq: { name: "Câu Hỏi Thường Gặp", link: "/faq" },
     withdrawrequest: { name: "Yêu Cầu Rút Tiền", link: "/withdrawrequest" },
-    product: { name: "Tìm Kiếm Sản Phẩm", link: "/product" }
+    product: { name: "Tìm Kiếm Sản Phẩm", link: "/product" },
+    checkout: { name: "Thanh toán", link: "/checkout"},
+    listreport: {name: "Danh sách đơn khiếu nại", link: "/listreport"}
   };
 
 

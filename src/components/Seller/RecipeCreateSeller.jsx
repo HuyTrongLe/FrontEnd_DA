@@ -70,13 +70,13 @@ const RecipeCustomer = () => {
     const newErrors = {};
 
     if (!recipeName) newErrors.recipeName = "Tên công thức là bắt buộc.";
-    if (!numberOfService || isNaN(numberOfService) || numberOfService <= 0) {
-      newErrors.numberOfService = "Vui lòng nhập số lượng phần ăn hợp lệ.";
+    if (!numberOfService || isNaN(numberOfService) || numberOfService <= 0|| !Number.isInteger(Number(numberOfService))) {
+      newErrors.numberOfService = "Vui lòng nhập số lượng phần ăn hợp lệ (số nguyên dương).";
     }
-    if (!price || isNaN(price) || price < 0) {
+    if (!price || isNaN(price) || price < 0|| !Number.isInteger(Number(price))) {
       newErrors.price = "Vui lòng nhập giá hợp lệ.";
     }
-    if (!nutrition) newErrors.nutrition = "Thông tin dinh dưỡng là cần thiết.";
+    if (!nutrition) newErrors.nutrition = "Thông tin dinh dưỡng là cần thiết (số nguyên dương).";
     if (!tutorial || tutorial.some((step) => step.trim() === "")) {
       newErrors.tutorial = "Các bước không được để trống.";
     }
@@ -84,10 +84,10 @@ const RecipeCustomer = () => {
       newErrors.ingredient = "Nguyên liệu không được để trống.";
     }
     if (!description) newErrors.description = "Mô tả là bắt buộc.";
-    if (!energy) newErrors.energy = "Năng lượng là bắt buộc.";
+    if (!energy|| !Number.isInteger(Number(energy))) newErrors.energy = "Năng lượng là bắt buộc (số nguyên dương).";
 
-    if (!totalTime || isNaN(totalTime) || totalTime <= 0) {
-      newErrors.totalTime = "Vui lòng nhập tổng thời gian hợp lệ.";
+    if (!totalTime || isNaN(totalTime) || totalTime <= 0|| !Number.isInteger(Number(totalTime))) {
+      newErrors.totalTime = "Vui lòng nhập tổng thời gian hợp lệ (số nguyên dương).";
     }
     if (recipeImage.length === 0) {
       newErrors.recipeImage = "Ít nhất một hình ảnh là bắt buộc.";
@@ -457,7 +457,7 @@ const RecipeCustomer = () => {
           <hr className="mb-8" />
           {/* Ingredients */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="col-span-1">
+          <div className="col-span-1">
               <h2 className="text-xl font-bold mb-4">Nguyên liệu</h2>
               {errors.ingredient && (
                 <p className="text-danger mt-2">{errors.ingredient}</p>
@@ -485,13 +485,15 @@ const RecipeCustomer = () => {
                     xs="auto"
                     className="d-flex align-items-center justify-content-center"
                   >
-                    <Button
-                      variant="link"
-                      onClick={() => removeIngredient(index)}
-                      className="text-danger"
-                    >
-                      <FiX size={24} />
-                    </Button>
+                    {ingredient.length > 1 && ( // Chỉ hiển thị nút xóa nếu mảng lớn hơn 1
+                      <Button
+                        variant="link"
+                        onClick={() => removeIngredient(index)}
+                        className="text-danger"
+                      >
+                        <FiX size={24} />
+                      </Button>
+                    )}
                   </Col>
                 </Row>
               ))}
@@ -504,6 +506,7 @@ const RecipeCustomer = () => {
                 Thêm nguyên liệu
               </Button>
             </div>
+
             <div className="col-span-1">
               {/* Directions Section */}
               <h2 className="text-xl font-bold mb-4">Các bước</h2>
@@ -537,13 +540,15 @@ const RecipeCustomer = () => {
                     xs="auto"
                     className="d-flex align-items-center justify-content-center"
                   >
-                    <Button
-                      variant="link"
-                      onClick={() => removeTutorialStep(index)}
-                      className="text-danger"
-                    >
-                      <FiX size={24} />
-                    </Button>
+                    {tutorial.length > 1 && ( // Chỉ hiển thị nút xóa nếu mảng lớn hơn 1
+                      <Button
+                        variant="link"
+                        onClick={() => removeTutorialStep(index)}
+                        className="text-danger"
+                      >
+                        <FiX size={24} />
+                      </Button>
+                    )}
                   </Col>
                 </Row>
               ))}

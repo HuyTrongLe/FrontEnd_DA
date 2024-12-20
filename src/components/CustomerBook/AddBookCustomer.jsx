@@ -751,6 +751,64 @@ const AddBook = () => {
     </div>
   );
 
+  // Add these validation functions at the top of your component
+  const validateNumber = (value) => {
+    // Remove any non-digit characters
+    return value.replace(/[^\d]/g, '');
+  };
+
+  // Update the price handler
+  const handlePriceChange = (e) => {
+    const rawValue = validateNumber(e.target.value);
+    if (rawValue) {
+      // Format with commas for display
+      const formattedValue = new Intl.NumberFormat('vi-VN').format(parseInt(rawValue));
+      setBook(prev => ({
+        ...prev,
+        price: formattedValue
+      }));
+    } else {
+      setBook(prev => ({
+        ...prev,
+        price: ''
+      }));
+    }
+  };
+
+  // Update the weight handler
+  const handleWeightChange = (e) => {
+    const rawValue = validateNumber(e.target.value);
+    setBook(prev => ({
+      ...prev,
+      weight: rawValue
+    }));
+  };
+
+  // Add handlers for length, width, and height
+  const handleLengthChange = (e) => {
+    const rawValue = validateNumber(e.target.value);
+    setBook(prev => ({
+      ...prev,
+      length: rawValue
+    }));
+  };
+
+  const handleWidthChange = (e) => {
+    const rawValue = validateNumber(e.target.value);
+    setBook(prev => ({
+      ...prev,
+      width: rawValue
+    }));
+  };
+
+  const handleHeightChange = (e) => {
+    const rawValue = validateNumber(e.target.value);
+    setBook(prev => ({
+      ...prev,
+      height: rawValue
+    }));
+  };
+
   return (
     <div className="min-h-screen py-8">
       <Container className="my-8 px-4 max-w-4xl mx-auto relative overflow-hidden">
@@ -925,10 +983,7 @@ const AddBook = () => {
                         id="price"
                         name="price"
                         value={book.price || ''}
-                        onChange={(e) => setBook(prev => ({
-                          ...prev,
-                          price: e.target.value
-                        }))}
+                        onChange={handlePriceChange}
                         required
                         className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
                                   focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
@@ -990,13 +1045,10 @@ const AddBook = () => {
                   <div className="grid md:grid-cols-4 gap-4">
                     <div className="relative">
                       <Form.Control
-                        type="number"
+                        type="text"
                         id="weight"
                         value={book.weight || ''}
-                        onChange={(e) => setBook(prev => ({
-                          ...prev,
-                          weight: e.target.value
-                        }))}
+                        onChange={handleWeightChange}
                         required
                         className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
                                   focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
@@ -1026,13 +1078,10 @@ const AddBook = () => {
 
                     <div className="relative">
                       <Form.Control
-                        type="number"
+                        type="text"
                         id="length"
                         value={book.length || ''}
-                        onChange={(e) => setBook(prev => ({
-                          ...prev,
-                          length: e.target.value
-                        }))}
+                        onChange={handleLengthChange}
                         required
                         className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
                                   focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
@@ -1062,13 +1111,10 @@ const AddBook = () => {
 
                     <div className="relative">
                       <Form.Control
-                        type="number"
+                        type="text"
                         id="width"
                         value={book.width || ''}
-                        onChange={(e) => setBook(prev => ({
-                          ...prev,
-                          width: e.target.value
-                        }))}
+                        onChange={handleWidthChange}
                         required
                         className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
                                   focus:border-orange-500 focus:ring-2 focus:ring-orange-200 
@@ -1098,13 +1144,10 @@ const AddBook = () => {
 
                     <div className="relative">
                       <Form.Control
-                        type="number"
+                        type="text"
                         id="height"
                         value={book.height || ''}
-                        onChange={(e) => setBook(prev => ({
-                          ...prev,
-                          height: e.target.value
-                        }))}
+                        onChange={handleHeightChange}
                         required
                         className="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 
                                   focus:border-orange-500 focus:ring-2 focus:ring-orange-200 

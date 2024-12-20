@@ -108,7 +108,7 @@ const RecipeDetail = () => {
         Swal.fire({
           icon: "error",
           title: "Thất bại!",
-          text: "Công thức đã cập nhật thất bại.",
+          text: "Cập nhật thất bại.",
           confirmButtonText: "OK",
         });
       }
@@ -317,7 +317,10 @@ const RecipeDetail = () => {
                     `Mod ${accountOnline} đã ${statusText} công thức ${recipe.recipeName} của bạn`
                   );
                 }else{
-                  `Mod ${accountOnline} đã ${statusText} công thức ${recipe.recipeName} của bạn với lý do ${censorNote}`
+                  handleNotification(
+                    `Mod ${accountOnline} đã ${statusText} công thức ${recipe.recipeName} của bạn với lý do ${censorNote}`
+                  );
+                  
                 }
                
                 handleSave();

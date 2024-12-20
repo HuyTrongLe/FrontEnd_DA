@@ -193,13 +193,26 @@ const EbookCustomer = () => {
     return value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
-  // Handle price input change
+  // Add this validation function at the top of your component
+  const validateNumber = (value) => {
+    // Remove any non-digit characters
+    return value.replace(/[^\d]/g, '');
+  };
+
+  // Update the price handler
   const handlePriceChange = (e) => {
-    const rawValue = e.target.value.replace(/,/g, ""); // Remove existing commas
-    if (!isNaN(rawValue)) {
-      setNewEbook((prev) => ({
+    const rawValue = validateNumber(e.target.value);
+    if (rawValue) {
+      // Format with commas for display
+      const formattedValue = new Intl.NumberFormat('vi-VN').format(parseInt(rawValue));
+      setNewEbook(prev => ({
         ...prev,
-        Price: formatNumberWithCommas(rawValue),
+        Price: formattedValue
+      }));
+    } else {
+      setNewEbook(prev => ({
+        ...prev,
+        Price: ''
       }));
     }
   };
@@ -638,7 +651,7 @@ const EbookCustomer = () => {
 
             <div className="relative">
               <Form.Group controlId="Pdf" className="mb-4">
-                <Form.Label className="block text-lg mb-2">Sách điện t�� (PDF)</Form.Label>
+                <Form.Label className="block text-lg mb-2">Sách điện tử (PDF)</Form.Label>
                 <div
                   onClick={() => document.getElementById("Pdf").click()}
                   className="cursor-pointer w-full p-8 border-2 border-dashed border-gray-300 rounded-lg 

@@ -7,6 +7,7 @@ import Swal from 'sweetalert2'; // Import SweetAlert2
 import {useSocket} from '../../../App'
 import {createNotification} from '../../services/NotificationService'
 import {getAccountById} from '../../services/AccountService'
+import { decryptData } from "../../Encrypt/encryptionUtils";
 const ReportResponse = () => {
     const { reportId } = useParams();
     const [report, setReport] = useState({});
@@ -20,7 +21,7 @@ const ReportResponse = () => {
             const reportDetail = await getReportById(reportId);
             if (reportDetail) {
                 setReport(reportDetail);
-                const storedUserId = Cookies.get('UserId');
+                const storedUserId = decryptData(Cookies.get('UserId'));
                 if (storedUserId) {
                     setUserId(storedUserId);
                 }

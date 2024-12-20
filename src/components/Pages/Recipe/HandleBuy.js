@@ -1,7 +1,7 @@
 import Swal from "sweetalert2";
 import axios from "axios";
 import { getAccountData } from "../../services/CustomerService/CustomerService";
-
+import { createNotification } from "../../services/NotificationService";
 const HandleBuy = async (
   recipe,
   accountId,
@@ -9,7 +9,10 @@ const HandleBuy = async (
   getAccountInfo,
   getPurchasedRecipes,
   dataAccount,
-  navigate
+  navigate,
+  socket,
+  accountOnline,
+  accountName
 ) => {
   if (!accountId) {
     Swal.fire({
@@ -215,6 +218,21 @@ const HandleBuy = async (
       "Giao dịch mua công thức đã được thực hiện thành công!",
       "success"
     ).then(() => {
+      socket.emit("sendNotification", {
+        senderName: accountOnline,
+        receiverName: accountName,
+        content: `${accountOnline} đã mua công thức ${recipe.recipeName} của bạn`,
+      });
+      const addNotification = () => {
+        const newNotificationData = {
+          accountId: recipe.createById,
+          content: `${accountOnline} đã mua công thức ${recipe.recipeName} của bạn`,
+          date: new Date().toISOString(),
+          status: 1,
+        };
+        createNotification(newNotificationData); // Không cần await
+      };
+      addNotification();
       window.location.reload(); // Reload lại trang
     });
     getPurchasedRecipes();

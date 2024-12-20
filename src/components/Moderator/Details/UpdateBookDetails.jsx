@@ -75,7 +75,7 @@ const BookDetail = () => {
       Swal.fire({
         icon: "success",
         title: "Thành công!",
-        text: "Công thức đã được cập nhật thành công.",
+        text: "Sách đã được cập nhật thành công.",
         confirmButtonText: "OK",
       });
     } catch (error) {
@@ -83,7 +83,7 @@ const BookDetail = () => {
       Swal.fire({
         icon: "error",
         title: "Thất bại!",
-        text: "Công thức đã cập nhật thất bại.",
+        text: "Cập nhật thất bại.",
         confirmButtonText: "OK",
       });
     }

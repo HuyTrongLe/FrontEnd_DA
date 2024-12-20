@@ -76,7 +76,7 @@ function EbookDetail() {
       Swal.fire({
         icon: "error",
         title: "Thất bại!",
-        text: "Sách điện tử đã cập nhật thất bại.",
+        text: "Cập nhật thất bại.",
         confirmButtonText: "OK",
       });
     }
@@ -221,7 +221,10 @@ function EbookDetail() {
                         `Mod ${accountOnline} đã ${statusText} công thức ${ebook.ebookName} của bạn`
                       );
                     }else{
-                      `Mod ${accountOnline} đã ${statusText} công thức ${ebook.ebookName} của bạn với lý do ${censorNote}`
+                      handleNotification(
+                        `Mod ${accountOnline} đã ${statusText} công thức ${ebook.ebookName} của bạn với lý do ${censorNote}`
+                      );
+                      
                     }
                     handleSave();
                   }}

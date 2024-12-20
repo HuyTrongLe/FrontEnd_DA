@@ -419,7 +419,10 @@ const RecipeDetail = () => {
                           getAccountInfo,
                           getPurchasedRecipes,
                           dataAccount,
-                          navigate
+                          navigate,
+                          socket,
+                          accountOnline,
+                          accountName
                         );
                       }}
                     >
