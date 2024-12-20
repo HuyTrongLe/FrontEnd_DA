@@ -218,11 +218,11 @@ function EbookDetail() {
                     const statusText = status === 1 ? "Xác nhận" : "Khóa";
                     if(censorNote){
                       handleNotification(
-                        `Mod ${accountOnline} đã ${statusText} công thức ${ebook.ebookName} của bạn`
+                        `Mod ${accountOnline} đã ${statusText} sách điện tử ${ebook.ebookName} của bạn`
                       );
                     }else{
                       handleNotification(
-                        `Mod ${accountOnline} đã ${statusText} công thức ${ebook.ebookName} của bạn với lý do ${censorNote}`
+                        `Mod ${accountOnline} đã ${statusText} sách điện tử ${ebook.ebookName} của bạn với lý do ${censorNote}`
                       );
                       
                     }

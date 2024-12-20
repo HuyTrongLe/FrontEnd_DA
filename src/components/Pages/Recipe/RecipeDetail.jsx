@@ -540,7 +540,7 @@ const RecipeDetail = () => {
                                 <strong>Bước {stepIndex}</strong>
                               </div>
                               <div className="ml-7">
-                                {purchasedRecipes.has(recipe.recipeId) ? (
+                                {(purchasedRecipes.has(recipe.recipeId) || recipe.price === 0) ? (
                                   <span>{step.trim()}</span>
                                 ) : (
                                   <span className="blurred">Nội dung bị ẩn</span>
