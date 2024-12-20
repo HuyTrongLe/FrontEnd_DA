@@ -8,6 +8,7 @@ import LoadingOverlay from '../../shared/LoadingOverlay';
 import { cancelOrder } from '../../services/OrderService';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
+import Sidebar from '../../Customer/Sidebar';
 import { decryptData } from "../../Encrypt/encryptionUtils";
 const formatAmount = (amount, paymentType) => {
   if (paymentType === 1) {
@@ -65,8 +66,8 @@ const SellerOrders = () => {
 
         // Filter orders that contain books created by the seller
         const sellerOrders = ordersResponse.data.filter(order => {
-          const orderDetails = detailsResponse.data.filter(detail => 
-            detail.orderId === order.orderId && 
+          const orderDetails = detailsResponse.data.filter(detail =>
+            detail.orderId === order.orderId &&
             detail.book?.createById === parseInt(sellerId)
           );
           return orderDetails.length > 0;
@@ -152,13 +153,13 @@ const SellerOrders = () => {
       try {
         setIsProcessing(true);
         const response = await cancelOrder(orderCode);
-        
+
         await Swal.fire({
           title: "Thành công!",
           text: response.message,
           icon: "success"
         });
-        
+
         window.location.reload();
       } catch (error) {
         console.error('Error cancelling order:', error);
@@ -184,15 +185,18 @@ const SellerOrders = () => {
   return (
     <motion.div>
       {isProcessing && <LoadingOverlay />}
+      <div className="flex flex-col md:flex-row justify-center items-start p-4 space-y-8 md:space-y-0 md:space-x-8">
+        <Sidebar />
+      
       <motion.div
         initial={{ x: "100%" }}
         animate={{ x: 0 }}
         exit={{ x: "-100%" }}
         transition={{ duration: 0.6, ease: "easeInOut" }}
-        className="container mx-auto px-4 py-8"
+        className="section-center w-[1140px] bg-white p-4 rounded-lg shadow-md flex flex-col"
       >
         <h1 className="text-2xl font-bold mb-6">Đơn Hàng Sách Của Tôi</h1>
-        
+
         {orders.length === 0 ? (
           <div className="text-center text-gray-500">
             Chưa có đơn hàng nào cho sách của bạn
@@ -242,8 +246,8 @@ const SellerOrders = () => {
                 </div>
 
                 {orderDetails[order.orderId]?.map((detail) => (
-                  <div 
-                    key={detail.orderDetailId} 
+                  <div
+                    key={detail.orderDetailId}
                     className="flex items-start gap-4 py-4 border-t cursor-pointer hover:bg-gray-50"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -289,7 +293,7 @@ const SellerOrders = () => {
                     <span className="font-semibold">Phí Vận Chuyển: </span>
                     {formatAmount(order.shipFee, order.paymentType)}
                   </div>
-                  
+
                   {orderStatuses[order.orderId]?.status === 1 && (
                     <button
                       onClick={() => handleCancelOrder(order.orderCode)}
@@ -305,6 +309,7 @@ const SellerOrders = () => {
           </div>
         )}
       </motion.div>
+      </div>
     </motion.div>
   );
 };

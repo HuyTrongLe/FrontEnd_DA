@@ -10,7 +10,7 @@ import CryptoJS from "crypto-js";
 import { useAuth } from "../RouterPage/AuthContext";
 import Swal from "sweetalert2";
 import { decryptData } from "../Encrypt/encryptionUtils";
-const secretKey = "your-secret-key"; 
+const secretKey = "fe-rmrbd-key"; 
 
 const encryptData = (data) => {
   return CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();

@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 import { logout } from "../services/CustomerService/CustomerService";
 
 // Mã hóa dữ liệu
-const secretKey = "your-secret-key";
+const secretKey = "fe-rmrbd-key";
 export const encryptData = (data) => {
   return CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
 };

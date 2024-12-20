@@ -50,10 +50,14 @@ const Breadcrumb = () => {
     "update-to-seller": { name: "Đăng Kí Bán Hàng", link: "/update-to-seller" },
     "form-updated-role": { name: "Thông Tin Đăng Kí Bán Hàng", link: "/form-updated-role" },
     "form updated-role": { name: "Thông Tin Đã Yêu Cầu", link: "/form-updated-role" },
+    "recipecustomer-detail" : { name: "Công Thức Đã Lưu", link: "/list-saved-recipe"},
+    "recipe-seller-detail": {name: "Công Thức Đã Đăng", link:"/recipe-list-seller"},
+    "seller-orders": {name: "Đơn đặt hàng sách của tôi", link:"/seller-orders"},
 
     // Khám phá và báo cáo
     places: { name: "Khám Phá Món Ăn", link: "/places" },
     report: { name: "Khiếu Nại", link: "/report" },
+    address: { name: "Địa chỉ của tôi", link: "/adress"},
 
     // Các trang khác
     faq: { name: "Câu Hỏi Thường Gặp", link: "/faq" },

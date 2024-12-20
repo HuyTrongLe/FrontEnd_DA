@@ -371,16 +371,16 @@ const handleSendOtp = async () => {
   }, [editMode, editData]);
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
+    <div className="flex flex-col md:flex-row justify-center items-start p-4 space-y-8 md:space-y-0 md:space-x-8">
       <Sidebar />
       
-      <div className="flex-1 p-4">
-        <Container className="px-4 max-w-4xl mx-auto">
+      <div className="flex flex-col">
+        <Container className="section-center w-[1140px] bg-white p-4 rounded-lg shadow-md flex flex-col">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6"
+            className="rounded-2xl p-6"
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">

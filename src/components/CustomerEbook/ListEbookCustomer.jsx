@@ -411,7 +411,19 @@ const EditEbookCustomer = () => {
                           </td>
                           <td className="px-6 py-4">
                             <button
-                              onClick={() => handleEditButtonClick(ebook)}
+                              onClick={() =>{
+                                if (ebook.status === 1) {
+                                  Swal.fire({
+                                    text: "Trạng thái của sách đã được xác nhận. Bạn không thể sửa!!!",
+                                    icon: "warning",
+                                    showCancelButton: false,
+                                    confirmButtonColor: "#3085d6",
+                                    confirmButtonText: "Tôi biết rồi",
+                                  });
+                                }else{
+                                  handleEditButtonClick(ebook);
+                                }
+                              }}
                               className="inline-flex items-center px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 transition-colors duration-200"
                             >
                               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
