@@ -96,11 +96,11 @@ const EditRecipe = () => {
     const newErrors = {};
 
     if (!recipeName) newErrors.recipeName = "Tên công thức là bắt buộc.";
-    if (!numberOfService || isNaN(numberOfService) || numberOfService <= 0) {
-      newErrors.numberOfService = "Vui lòng nhập số lượng phần ăn hợp lệ.";
+    if (!numberOfService || !Number.isInteger(numberOfService) || numberOfService <= 0) {
+      newErrors.numberOfService = "Vui lòng nhập số lượng phần ăn là số nguyên dương.";
     }
-    if (!price || isNaN(price) || price < 0) {
-      newErrors.price = "Vui lòng nhập giá hợp lệ.";
+    if (!price || !Number.isInteger(price) || price <= 0) {
+      newErrors.price = "Vui lòng nhập giá là số nguyên dương.";
     }
     if (!nutrition) newErrors.nutrition = "Thông tin dinh dưỡng là cần thiết.";
     tutorial.forEach((ing, index) => {
@@ -119,18 +119,18 @@ const EditRecipe = () => {
       }
     });
     if (!description) newErrors.description = "Mô tả là bắt buộc.";
-    if (!energy || isNaN(energy) || energy <= 0)
-      newErrors.energy = "Vui lòng nhập giá trị hợp lệ.";
-
-    if (!totalTime || isNaN(totalTime) || totalTime <= 0) {
-      newErrors.totalTime = "Vui lòng nhập tổng thời gian hợp lệ.";
+    if (!energy || !Number.isInteger(energy) || energy <= 0) {
+      newErrors.energy = "Vui lòng nhập giá trị năng lượng là số nguyên dương.";
+    }
+    if (!totalTime || !Number.isInteger(totalTime) || totalTime <= 0) {
+      newErrors.totalTime = "Vui lòng nhập tổng thời gian là số nguyên dương.";
     }
     if (selectedTagIds.length === 0) {
       newErrors.selectedTagIds = "Vui lòng chọn ít nhất một thẻ.";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+};
   // Lấy tất cả các tag có `status = 1`
   const fetchTags = async () => {
     try {

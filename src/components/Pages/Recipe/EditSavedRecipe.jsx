@@ -79,9 +79,9 @@ const EditSavedRecipe = () => {
         }
       });
     }
-    if (editFields.numberOfService <= 0) {
-      newErrors.numberOfService = "Số người phục vụ phải lớn hơn 0.";
-    }
+    if (editFields.numberOfService <= 0 || !Number.isInteger(editFields.numberOfService)) {
+      newErrors.numberOfService = "Số người phục vụ phải là một số nguyên dương.";
+  }
     if (!editFields.nutrition?.trim()) {
       newErrors.nutrition = "Dinh dưỡng không được để trống.";
     }
