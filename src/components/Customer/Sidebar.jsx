@@ -87,11 +87,11 @@ const Sidebar = () => {
       path: "/orders",
       label: "Đơn hàng của bạn",
       icon: <FiBook className="text-orange-500" />,
-      visibleFor: ["Customer"],
+      visibleFor: ["Customer", "Seller"],
     },
     {
       path: "/seller-orders",
-      label: "Đơn hàng của bạn",
+      label: "Cửa hàng của bạn",
       icon: <FiBook className="text-orange-500" />,
       visibleFor: ["Seller"],
     },
